@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sat_config_autotransporte_tree" model="ir.ui.view">
+        <field name="name">tms.sat.config.autotransporte.tree</field>
+        <field name="model">tms.sat.config.autotransporte</field>
+        <field name="arch" type="xml">
+            <list string="Configuración Autotransporte SAT">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="numero_ejes_remolque"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_sat_config_autotransporte" model="ir.actions.act_window">
+        <field name="name">Configuración Autotransporte SAT</field>
+        <field name="res_model">tms.sat.config.autotransporte</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
+

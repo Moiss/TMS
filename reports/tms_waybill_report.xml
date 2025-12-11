@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ================================================================
+    REPORTE PDF: COTIZACIÓN / CARTA PORTE
+    ================================================================
+
+    ¿QUÉ HACE ESTE ARCHIVO?
+    - Define el diseño del reporte PDF que se genera para cada waybill
+    - Incluye toda la información de la cotización (origen, destino, mercancías, precios)
+    - Muestra la firma digital si existe (sección al final)
+
+    ESTRUCTURA:
+    - Reporte principal: tms_waybill_report (usa el formato estándar de Odoo)
+    - Plantilla QWeb: tms_waybill_report_template (diseño del PDF)
+    - Acción de impresión: action_tms_waybill_report (botón "Imprimir" en el formulario)
+
+    TECNOLOGÍA:
+    - Usa QWeb (motor de plantillas de Odoo)
+    - Genera PDF usando wkhtmltopdf (herramienta externa)
+    - Se puede imprimir desde el formulario o desde el portal
+-->
+<odoo>
+    <!--
+        ================================================================
+        DEFINICIÓN DEL REPORTE (ir.actions.report)
+        ================================================================
+
+        ¿QUÉ ES ir.actions.report?
+        - Es el modelo de Odoo que define reportes (PDF, Excel, etc.)
+        - Se vincula con una plantilla QWeb que contiene el diseño
+        - Se puede invocar desde botones, menús o código Python
+
+        PARÁMETROS IMPORTANTES:
+        - name: Nombre que aparece en el menú "Imprimir"
+        - model: Modelo al que aplica (tms.waybill)
+        - report_type: 'qweb-pdf' (genera PDF usando QWeb)
+        - report_name: Nombre del archivo PDF generado
+        - report_file: Ruta del template QWeb (sin extensión .xml)
+    -->
+    <record id="action_tms_waybill_report" model="ir.actions.report">
+        <!--
+            name: Nombre del reporte (aparece en el menú "Imprimir")
+        -->
+        <field name="name">Cotización / Carta Porte</field>
+        <!--
+            model: Modelo al que aplica este reporte
+            tms.waybill: Modelo maestro de viajes/cotizaciones
+        -->
+        <field name="model">tms.waybill</field>
+        <!--
+            report_type: Tipo de reporte
+            qweb-pdf: Genera PDF usando plantilla QWeb
+        -->
+        <field name="report_type">qweb-pdf</field>
+        <!--
+            report_name: Nombre del archivo PDF generado
+            %(name)s: Se reemplaza con el folio del waybill (ej: "VJ/00001.pdf")
+        -->
+        <field name="report_name">tms.waybill_report_%(name)s</field>
+        <!--
+            report_file: Ruta del template QWeb (sin extensión)
+            tms.report_tms_waybill_template: ID externo del template (definido abajo)
+        -->
+        <field name="report_file">tms.report_tms_waybill_template</field>
+        <!--
+            binding_model_id: Modelo al que se vincula el botón "Imprimir"
+            Esto hace que aparezca automáticamente en el formulario de tms.waybill
+        -->
+        <field name="binding_model_id" ref="model_tms_waybill"/>
+        <!--
+            binding_type: Tipo de vinculación
+            report: Aparece como botón "Imprimir" en el formulario
+        -->
+        <field name="binding_type">report</field>
+    </record>
+
+    <!--
+        ================================================================
+        PLANTILLA QWEB: DISEÑO DEL PDF
+        ================================================================
+
+        ¿QUÉ ES QWeb?
+        - Motor de plantillas de Odoo (similar a Jinja2 o Django templates)
+        - Permite generar HTML que luego se convierte a PDF
+        - Usa sintaxis especial: t-esc, t-if, t-foreach, etc.
+
+        ESTRUCTURA:
+        - <t t-name="...">: Define el nombre de la plantilla
+        - <t t-call="...">: Llama a otra plantilla (reutilización)
+        - <t t-esc="...">: Escapa HTML (seguridad XSS)
+        - <t t-raw="...">: Renderiza HTML sin escapar (usar con cuidado)
+        - <t t-if="...">: Condicional
+        - <t t-foreach="...">: Bucle
+
+        VARIABLE ESPECIAL:
+        - o: Objeto del registro actual (waybill)
+        - Ejemplo: o.name = folio, o.partner_origin_id.name = cliente origen
+    -->
+    <template id="report_tms_waybill_template">
+        <!--
+            t-name: Nombre interno de la plantilla (debe coincidir con report_file)
+            Este es el nombre que se usa en el campo report_file del ir.actions.report
+        -->
+        <t t-name="tms.report_tms_waybill_template">
+            <!--
+                t-call: Llama a la plantilla base de reportes de Odoo
+                web.external_layout: Proporciona header y footer estándar (logo, fecha, página)
+
+                IMPORTANTE: En Odoo 18, los reportes reciben una variable 'docs' que contiene
+                los registros a imprimir. Para un solo registro, usamos docs[0] o iteramos con t-foreach.
+            -->
+            <t t-call="web.external_layout">
+                <!--
+                    t-foreach: Itera sobre los registros en 'docs'
+                    docs: Variable especial de Odoo que contiene los registros del reporte
+                    t-as="o": Asigna cada registro a la variable 'o'
+
+                    NOTA: Aunque normalmente es un solo waybill, usamos foreach para compatibilidad
+                -->
+                <t t-foreach="docs" t-as="o">
+                    <!--
+                        ================================================================
+                        ENCABEZADO: FOLIO Y FECHA
+                        ================================================================
+                    -->
+                    <div class="row mb-4">
+                        <!--
+                            Columna izquierda: Folio
+                            class="col-6": 6 columnas de 12 (50% del ancho)
+                        -->
+                        <div class="col-6">
+                            <!--
+                                h2: Título grande
+                                t-esc: Escapa HTML (previene XSS)
+                                o.name: Folio del waybill (ej: "VJ/00001")
+                            -->
+                            <h2>Cotización <t t-esc="o.name"/></h2>
+                        </div>
+                        <!--
+                            Columna derecha: Fecha
+                            class="col-6 text-right": Alineado a la derecha
+                        -->
+                        <div class="col-6 text-right">
+                            <p><strong>Fecha:</strong> <t t-esc="o.date_created"/></p>
+                            <!--
+                                t-if: Solo muestra si o.state existe
+                                o.state: Estado del waybill (request, confirmed, etc.)
+                            -->
+                            <t t-if="o.state">
+                                <p><strong>Estado:</strong> <t t-esc="dict(o._fields['state'].selection)[o.state]"/></p>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!--
+                        ================================================================
+                        SECCIÓN 1: INFORMACIÓN DE RUTA
+                        ================================================================
+                    -->
+                    <div class="row mb-4">
+                        <!--
+                            Columna izquierda: Origen
+                        -->
+                        <div class="col-6">
+                            <h4>📍 Origen</h4>
+                            <!--
+                                t-if: Solo muestra si o.partner_origin_id existe
+                                o.partner_origin_id.name: Nombre del cliente origen
+                            -->
+                            <t t-if="o.partner_origin_id">
+                                <p><strong>Cliente:</strong> <t t-esc="o.partner_origin_id.name"/></p>
+                            </t>
+                            <t t-if="o.origin_city_id">
+                                <p><strong>Ciudad:</strong> <t t-esc="o.origin_city_id.name"/></p>
+                            </t>
+                            <t t-if="o.origin_address">
+                                <p><strong>Dirección:</strong> <t t-esc="o.origin_address"/></p>
+                            </t>
+                        </div>
+                        <!--
+                            Columna derecha: Destino
+                        -->
+                        <div class="col-6">
+                            <h4>🏁 Destino</h4>
+                            <t t-if="o.partner_dest_id">
+                                <p><strong>Cliente:</strong> <t t-esc="o.partner_dest_id.name"/></p>
+                            </t>
+                            <t t-if="o.dest_city_id">
+                                <p><strong>Ciudad:</strong> <t t-esc="o.dest_city_id.name"/></p>
+                            </t>
+                            <t t-if="o.dest_address">
+                                <p><strong>Dirección:</strong> <t t-esc="o.dest_address"/></p>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!--
+                        ================================================================
+                        SECCIÓN 2: INFORMACIÓN DE RUTA (DISTANCIA Y DURACIÓN)
+                        ================================================================
+                    -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h4>📏 Información de Ruta</h4>
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <!--
+                                        t-if: Solo muestra la fila si el campo tiene valor
+                                    -->
+                                    <t t-if="o.distance_km">
+                                        <tr>
+                                            <td><strong>Distancia:</strong></td>
+                                            <td><t t-esc="o.distance_km"/> km</td>
+                                        </tr>
+                                    </t>
+                                    <t t-if="o.duration_hours">
+                                        <tr>
+                                            <td><strong>Duración Estimada:</strong></td>
+                                            <td><t t-esc="o.duration_hours"/> horas</td>
+                                        </tr>
+                                    </t>
+                                    <!--
+                                        t-if: Solo muestra si o.route_name existe
+                                        o.route_name: Ruta computada (ej: "Monterrey → CDMX")
+                                    -->
+                                    <t t-if="o.route_name">
+                                        <tr>
+                                            <td><strong>Ruta:</strong></td>
+                                            <td><t t-esc="o.route_name"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!--
+                        ================================================================
+                        SECCIÓN 3: MERCADERÍAS (LÍNEAS DE PRODUCTOS)
+                        ================================================================
+                    -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h4>📦 Mercancías</h4>
+                            <!--
+                                t-if: Solo muestra la tabla si hay líneas
+                                o.line_ids: One2many con las líneas de productos
+                            -->
+                            <t t-if="o.line_ids">
+                                <table class="table table-bordered">
+                                    <!--
+                                        thead: Encabezado de la tabla
+                                    -->
+                                    <thead>
+                                        <tr>
+                                            <th>Producto SAT</th>
+                                            <th>Descripción</th>
+                                            <th>Cantidad</th>
+                                            <th>Peso (Kg)</th>
+                                        </tr>
+                                    </thead>
+                                    <!--
+                                        tbody: Cuerpo de la tabla
+                                        t-foreach: Itera sobre cada línea
+                                        line: Variable temporal para cada iteración
+                                    -->
+                                    <tbody>
+                                        <t t-foreach="o.line_ids" t-as="line">
+                                            <tr>
+                                                <!--
+                                                    t-esc: Escapa HTML (seguridad)
+                                                    line.product_sat_id.name: Nombre del producto SAT
+                                                    or '': Si es None, muestra cadena vacía
+                                                -->
+                                                <td><t t-esc="line.product_sat_id.name or ''"/></td>
+                                                <td><t t-esc="line.description or ''"/></td>
+                                                <td><t t-esc="line.quantity or 0"/></td>
+                                                <td><t t-esc="line.weight_kg or 0"/></td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <!--
+                                t-else: Si no hay líneas, muestra mensaje
+                            -->
+                            <t t-else="">
+                                <p class="text-muted">No hay mercancías registradas.</p>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!--
+                        ================================================================
+                        SECCIÓN 4: RESUMEN FINANCIERO
+                        ================================================================
+                    -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h4>💰 Resumen Financiero</h4>
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <!--
+                                        t-if: Solo muestra si o.amount_total existe
+                                        o.amount_total: Monto total de la cotización
+                                        o.currency_id.symbol: Símbolo de la moneda ($, €, etc.)
+                                    -->
+                                    <t t-if="o.amount_total">
+                                        <tr>
+                                            <td><strong>Monto Total:</strong></td>
+                                            <td class="text-right">
+                                                <strong>
+                                                    <t t-esc="o.currency_id.symbol or ''"/>
+                                                    <t t-esc="o.amount_total"/>
+                                                </strong>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <!--
+                                        t-if: Solo muestra si o.selected_proposal existe
+                                        o.selected_proposal: Tipo de propuesta seleccionada (km, trip, direct)
+                                    -->
+                                    <t t-if="o.selected_proposal">
+                                        <tr>
+                                            <td><strong>Propuesta Seleccionada:</strong></td>
+                                            <td>
+                                                <t t-if="o.selected_proposal == 'km'">Por Kilómetro</t>
+                                                <t t-elif="o.selected_proposal == 'trip'">Por Viaje (Costos)</t>
+                                                <t t-elif="o.selected_proposal == 'direct'">Precio Directo</t>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!--
+                        ================================================================
+                        SECCIÓN 5: FIRMA DIGITAL (Si existe)
+                        ================================================================
+                        Esta sección solo aparece si la cotización fue firmada
+                    -->
+                    <t t-if="o.signature">
+                        <!--
+                            Separador visual antes de la firma
+                            class="mt-5": Margen superior grande (5 unidades)
+                        -->
+                        <div class="mt-5">
+                            <h4>✍️ Firma Digital</h4>
+                            <!--
+                                Contenedor para la firma
+                                style="border: 1px solid #ccc; padding: 10px; background: white;":
+                                Borde, padding y fondo blanco para que la firma se vea bien
+                            -->
+                            <div style="border: 1px solid #ccc; padding: 10px; background: white; display: inline-block;">
+                                <!--
+                                    img: Imagen de la firma
+                                    t-attf-src: Atributo dinámico (data:image/png;base64,...)
+                                    o.signature: Imagen binaria de la firma (base64)
+                                    style="max-width: 300px": Limita el ancho máximo
+                                -->
+                                <img t-attf-src="data:image/png;base64,{{ o.signature }}"
+                                     alt="Firma Digital"
+                                     style="max-width: 300px;"/>
+                            </div>
+                            <!--
+                                Información de quién y cuándo firmó
+                                class="mt-3": Margen superior (3 unidades)
+                            -->
+                            <div class="mt-3">
+                                <!--
+                                    t-if: Solo muestra si o.signed_by existe
+                                    o.signed_by: Nombre de la persona que firmó
+                                -->
+                                <t t-if="o.signed_by">
+                                    <p><strong>Firmado por:</strong> <t t-esc="o.signed_by"/></p>
+                                </t>
+                                <!--
+                                    t-if: Solo muestra si o.signed_on existe
+                                    o.signed_on: Fecha y hora de la firma (formato Datetime)
+                                -->
+                                <t t-if="o.signed_on">
+                                    <p><strong>Fecha y hora:</strong> <t t-esc="o.signed_on"/></p>
+                                </t>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
+

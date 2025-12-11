@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        ================================================================
+        VISTA TREE (LISTA) - Clave Producto/Servicio
+        ================================================================
+    -->
+    <record id="view_sat_clave_prod_tree" model="ir.ui.view">
+        <field name="name">tms.sat.clave.prod.tree</field>
+        <field name="model">tms.sat.clave.prod</field>
+        <field name="arch" type="xml">
+            <!-- Vista de lista para catálogo de productos SAT -->
+            <list string="Clave Producto/Servicio SAT">
+                <!-- Columna: Código SAT -->
+                <field name="code"/>
+
+                <!-- Columna: Descripción -->
+                <field name="name"/>
+
+                <!-- Columna: Material Peligroso -->
+                <field name="material_peligroso" optional="show"/>
+                <!-- optional="show": columna visible por defecto pero se puede ocultar -->
+
+                <!-- Columna: Palabras Clave -->
+                <field name="palabras_clave" optional="hide"/>
+                <!-- optional="hide": columna oculta por defecto pero se puede mostrar -->
+            </list>
+        </field>
+    </record>
+
+    <!--
+        ================================================================
+        VISTA SEARCH - Búsqueda y Filtros
+        ================================================================
+    -->
+    <record id="view_sat_clave_prod_search" model="ir.ui.view">
+        <field name="name">tms.sat.clave.prod.search</field>
+        <field name="model">tms.sat.clave.prod</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Clave SAT">
+                <!-- Campo de búsqueda rápida por código -->
+                <field name="code" string="Clave"
+                       filter_domain="[('code', 'ilike', self)]"/>
+
+                <!-- Campo de búsqueda rápida por descripción -->
+                <field name="name" string="Descripción"/>
+
+                <!-- Campo de búsqueda por palabras clave -->
+                <field name="palabras_clave"/>
+
+                <!-- Filtro: Solo materiales peligrosos -->
+                <filter name="filter_peligroso"
+                        string="Material Peligroso"
+                        domain="[('material_peligroso', '=', '1')]"/>
+
+                <!-- Filtro: Solo NO peligrosos -->
+                <filter name="filter_no_peligroso"
+                        string="No Peligroso"
+                        domain="[('material_peligroso', '=', '0')]"/>
+            </search>
+        </field>
+    </record>
+
+    <!--
+        ================================================================
+        ACTION - Acción de Ventana
+        ================================================================
+    -->
+    <record id="action_sat_clave_prod" model="ir.actions.act_window">
+        <field name="name">Clave Producto/Servicio SAT</field>
+        <field name="res_model">tms.sat.clave.prod</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay claves de producto cargadas
+            </p>
+            <p>
+                Usa el wizard de importación para cargar el catálogo desde Excel.
+            </p>
+        </field>
+    </record>
+
+</odoo>
+

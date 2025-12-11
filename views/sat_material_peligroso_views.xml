@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista Tree: Material Peligroso -->
+    <record id="view_sat_material_peligroso_tree" model="ir.ui.view">
+        <field name="name">tms.sat.material.peligroso.tree</field>
+        <field name="model">tms.sat.material.peligroso</field>
+        <field name="arch" type="xml">
+            <list string="Material Peligroso SAT">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="clase"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Search: Material Peligroso -->
+    <record id="view_sat_material_peligroso_search" model="ir.ui.view">
+        <field name="name">tms.sat.material.peligroso.search</field>
+        <field name="model">tms.sat.material.peligroso</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Material Peligroso">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="clase"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action: Material Peligroso -->
+    <record id="action_sat_material_peligroso" model="ir.actions.act_window">
+        <field name="name">Material Peligroso SAT</field>
+        <field name="res_model">tms.sat.material.peligroso</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>
+

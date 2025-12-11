@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        ================================================================
+        VISTA FORM DEL WIZARD - Importación de Catálogos SAT
+        ================================================================
+        Vista simplificada sin barra de progreso
+    -->
+    <record id="view_sat_import_wizard_form" model="ir.ui.view">
+        <field name="name">sat.import.wizard.form</field>
+        <field name="model">sat.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Importar Catálogo SAT">
+                <sheet>
+                    <group>
+                        <group string="Configuración">
+                            <field name="catalog_type"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Archivo Excel">
+                            <field name="excel_file" filename="file_name"/>
+                            <field name="file_name" invisible="1"/>
+                        </group>
+
+                        <group string="Configuración del Archivo">
+                            <field name="sheet_index"/>
+                            <field name="data_start_row"/>
+                        </group>
+                    </group>
+
+                    <div class="alert alert-info" role="alert">
+                        <strong>Formato esperado del Excel:</strong>
+                        <ul>
+                            <li><strong>Formatos soportados:</strong> .xlsx (Excel moderno) y .xls (Excel antiguo)</li>
+                            <li><strong>Fila de Datos (Inicio):</strong> Indica desde qué fila comenzar a leer los datos (por defecto: 2)</li>
+                            <li><strong>Encabezados:</strong> Se omiten automáticamente según la fila de inicio especificada</li>
+                            <li><strong>Columnas:</strong> El sistema usa mapeo exacto según el tipo de catálogo</li>
+                        </ul>
+                        <p class="mb-0">
+                            <strong>Tips:</strong>
+                            <ul class="mb-0">
+                                <li>El número de hoja empieza en 0 (primera hoja = 0, segunda = 1, etc.)</li>
+                                <li>Si tu Excel tiene múltiples filas de encabezados, ajusta "Fila de Datos (Inicio)" (ej: 3, 4, 5...)</li>
+                                <li>El sistema detecta automáticamente el formato (.xlsx o .xls)</li>
+                            </ul>
+                        </p>
+                    </div>
+                </sheet>
+
+                <footer>
+                    <button name="action_import"
+                            type="object"
+                            string="Importar"
+                            class="btn-primary"/>
+
+                    <button name="action_clear_catalog"
+                            type="object"
+                            string="Limpiar Catálogo"
+                            class="btn-secondary"
+                            confirm="¿Está seguro de eliminar TODOS los registros de este catálogo? Esta acción no se puede deshacer."/>
+
+                    <button string="Cancelar"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!--
+        ================================================================
+        ACTION - Acción para abrir el wizard
+        ================================================================
+    -->
+    <record id="action_sat_import_wizard" model="ir.actions.act_window">
+        <field name="name">Importar Catálogos SAT</field>
+        <field name="res_model">sat.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

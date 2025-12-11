@@ -1,0 +1,70 @@
+# -*- coding: utf-8 -*-
+
+from odoo import models, fields
+
+
+class TmsSatMunicipio(models.Model):
+    """
+    Catálogo c_Municipio del SAT.
+    Contiene los municipios por estado.
+
+    ARQUITECTURA SAAS: Catálogo GLOBAL sin company_id.
+    IMPORTANTE: El código se repite por estado, por lo que la unicidad
+    se garantiza con la combinación (code, estado).
+    """
+
+    _name = 'tms.sat.municipio'
+    _description = 'Catálogo de Municipios SAT'
+    _rec_name = 'name'  # Usamos name porque el código se repite
+    _order = 'estado asc, name asc'
+
+    # ============================================================
+    # CAMPOS
+    # ============================================================
+
+    code = fields.Char(
+        string='Clave',
+        required=True,
+        index=True,
+        help='Código de municipio según catálogo c_Municipio del SAT'
+    )
+
+    estado = fields.Char(
+        string='Estado',
+        required=True,
+        index=True,
+        help='Estado al que pertenece el municipio'
+    )
+
+    name = fields.Char(
+        string='Descripción',
+        required=True,
+        help='Nombre del municipio'
+    )
+
+    # ============================================================
+    # CONSTRAINTS - UNICIDAD COMPUESTA
+    # ============================================================
+
+    # REGLA DE UNICIDAD COMPUESTA: Clave + Estado
+    # CRÍTICO: Permite que el mismo código exista en diferentes estados
+    # Ejemplo: código '001' puede existir en 'AGU' y en 'BCN' simultáneamente
+    _sql_constraints = [
+        ('code_estado_uniq', 'unique(code, estado)',
+         'La combinación de Clave Municipio y Estado debe ser única.')
+    ]
+
+    # ============================================================
+    # MÉTODOS
+    # ============================================================
+
+    def name_get(self):
+        """
+        Muestra: "[Código] Descripción (Estado)"
+        Ejemplo: "[001] Aguascalientes (AGU)"
+        """
+        result = []
+        for rec in self:
+            name = f"[{rec.code}] {rec.name} ({rec.estado})"
+            result.append((rec.id, name))
+        return result

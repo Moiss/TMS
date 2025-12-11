@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Icono Profesional TMS - Hombre Camión
+    Diseño: Moderno, minimalista, corporativo
+    Concepto: Owner-Operator + Catálogos SAT + Tecnología
+-->
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+
+    <defs>
+        <!-- Gradiente principal: Azul oscuro profesional -->
+        <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+        </linearGradient>
+
+        <!-- Gradiente secundario: Azul tech -->
+        <linearGradient id="techGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+        </linearGradient>
+
+        <!-- Gradiente acento: Naranja premium -->
+        <linearGradient id="accentGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#fb923c;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
+        </linearGradient>
+
+        <!-- Sombra suave -->
+        <filter id="softShadow">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+            <feOffset dx="0" dy="2" result="offsetblur"/>
+            <feComponentTransfer>
+                <feFuncA type="linear" slope="0.3"/>
+            </feComponentTransfer>
+            <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </defs>
+
+    <!-- Fondo: Círculo con gradiente azul profesional -->
+    <circle cx="128" cy="128" r="118" fill="url(#mainGradient)" opacity="0.95"/>
+
+    <!-- Anillo exterior decorativo -->
+    <circle cx="128" cy="128" r="118" fill="none" stroke="url(#techGradient)"
+            stroke-width="4" opacity="0.6"/>
+
+    <!-- =================================== -->
+    <!-- SECCIÓN SUPERIOR: Conductor/Avatar -->
+    <!-- =================================== -->
+    <g id="driver_section" filter="url(#softShadow)">
+        <!-- Círculo de fondo del avatar -->
+        <circle cx="128" cy="85" r="35" fill="url(#accentGradient)"/>
+
+        <!-- Cabeza del conductor (minimalista) -->
+        <circle cx="128" cy="80" r="18" fill="#ffffff"/>
+
+        <!-- Cuerpo del conductor (forma simple) -->
+        <path d="M 128 98 Q 115 100 110 115 L 146 115 Q 141 100 128 98 Z"
+              fill="#ffffff"/>
+
+        <!-- Gorra/casco (elemento distintivo del conductor profesional) -->
+        <ellipse cx="128" cy="72" rx="20" ry="7" fill="#1e3a8a"/>
+        <rect x="108" y="72" width="40" height="5" rx="2" fill="#1e3a8a"/>
+
+        <!-- Detalle: visera de la gorra -->
+        <ellipse cx="128" cy="77" rx="22" ry="4" fill="#1e40af" opacity="0.5"/>
+    </g>
+
+    <!-- =================================== -->
+    <!-- SECCIÓN CENTRAL: Camión Moderno -->
+    <!-- =================================== -->
+    <g id="truck_modern" filter="url(#softShadow)">
+        <!-- Contenedor/caja de carga (diseño limpio) -->
+        <rect x="75" y="125" width="106" height="45" rx="5"
+              fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+
+        <!-- Líneas de contenido (representan mercancía catalogada) -->
+        <g opacity="0.4">
+            <rect x="85" y="133" width="30" height="4" rx="2" fill="#6b7280"/>
+            <rect x="85" y="142" width="45" height="4" rx="2" fill="#6b7280"/>
+            <rect x="85" y="151" width="35" height="4" rx="2" fill="#6b7280"/>
+            <rect x="85" y="160" width="40" height="4" rx="2" fill="#6b7280"/>
+        </g>
+
+        <!-- Código QR estilizado (representa digitalización/catálogo) -->
+        <g transform="translate(145, 133)">
+            <rect width="25" height="25" rx="2" fill="#3b82f6" opacity="0.3"/>
+            <rect x="3" y="3" width="4" height="4" fill="#1e40af"/>
+            <rect x="10" y="3" width="4" height="4" fill="#1e40af"/>
+            <rect x="17" y="3" width="4" height="4" fill="#1e40af"/>
+            <rect x="3" y="10" width="4" height="4" fill="#1e40af"/>
+            <rect x="17" y="10" width="4" height="4" fill="#1e40af"/>
+            <rect x="3" y="17" width="4" height="4" fill="#1e40af"/>
+            <rect x="10" y="17" width="4" height="4" fill="#1e40af"/>
+            <rect x="17" y="17" width="4" height="4" fill="#1e40af"/>
+        </g>
+
+        <!-- Base/chasis del camión -->
+        <rect x="75" y="170" width="106" height="8" rx="2" fill="#4b5563"/>
+
+        <!-- Ruedas (diseño moderno con llanta y rin) -->
+        <g id="wheels">
+            <!-- Rueda 1 -->
+            <circle cx="95" cy="183" r="13" fill="#1f2937"/>
+            <circle cx="95" cy="183" r="8" fill="#6b7280"/>
+            <circle cx="95" cy="183" r="4" fill="#9ca3af"/>
+
+            <!-- Rueda 2 -->
+            <circle cx="128" cy="183" r="13" fill="#1f2937"/>
+            <circle cx="128" cy="183" r="8" fill="#6b7280"/>
+            <circle cx="128" cy="183" r="4" fill="#9ca3af"/>
+
+            <!-- Rueda 3 -->
+            <circle cx="161" cy="183" r="13" fill="#1f2937"/>
+            <circle cx="161" cy="183" r="8" fill="#6b7280"/>
+            <circle cx="161" cy="183" r="4" fill="#9ca3af"/>
+        </g>
+    </g>
+
+    <!-- =================================== -->
+    <!-- ELEMENTOS DE ACENTO: SAT + Tech -->
+    <!-- =================================== -->
+
+    <!-- Badge SAT (diseño moderno) -->
+    <g id="sat_badge" filter="url(#softShadow)">
+        <!-- Fondo del badge con gradiente verde -->
+        <rect x="185" y="45" width="50" height="28" rx="14" fill="#10b981" opacity="0.95"/>
+
+        <!-- Texto SAT -->
+        <text x="210" y="64" font-family="'SF Pro Display', 'Segoe UI', Arial, sans-serif"
+              font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">SAT</text>
+    </g>
+
+    <!-- Icono de verificación (checkmark moderno) -->
+    <g id="verified_check">
+        <circle cx="210" cy="85" r="14" fill="#10b981" opacity="0.95"/>
+        <path d="M 204 85 L 208 89 L 216 80" stroke="#ffffff" stroke-width="3"
+              fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- Indicador "3.1" (versión Carta Porte) -->
+    <g id="version_indicator">
+        <rect x="20" y="45" width="42" height="22" rx="11"
+              fill="url(#accentGradient)" opacity="0.95"/>
+        <text x="41" y="61" font-family="'SF Pro Display', 'Segoe UI', Arial, sans-serif"
+              font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">v3.1</text>
+    </g>
+
+    <!-- =================================== -->
+    <!-- ELEMENTOS DECORATIVOS (Tech Feel) -->
+    <!-- =================================== -->
+
+    <!-- Líneas de conexión/flujo (representa integración) -->
+    <g id="connection_lines" opacity="0.15">
+        <line x1="128" y1="120" x2="128" y2="125" stroke="#ffffff" stroke-width="2"/>
+        <circle cx="128" cy="122" r="3" fill="#ffffff"/>
+    </g>
+
+    <!-- Puntos decorativos (estilo tech) -->
+    <g id="tech_dots" opacity="0.2">
+        <circle cx="50" cy="128" r="2" fill="#ffffff"/>
+        <circle cx="206" cy="128" r="2" fill="#ffffff"/>
+        <circle cx="128" cy="220" r="2" fill="#ffffff"/>
+    </g>
+
+    <!-- Texto inferior "TMS" (con mejor tipografía) -->
+    <text x="128" y="218" font-family="'SF Pro Display', 'Segoe UI', Arial, sans-serif"
+          font-size="26" font-weight="800" fill="#ffffff" text-anchor="middle"
+          letter-spacing="2" opacity="0.95">TMS</text>
+
+</svg>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Datos de demostración
+        Estos datos solo se cargan si se activa "Load demo data" al instalar
+    -->
+    <data noupdate="1">
+
+        <!--
+            Cliente Demo: Transportes del Norte
+        -->
+        <record id="partner_transportes_norte" model="res.partner">
+            <field name="name">Transportes del Norte</field>
+            <field name="customer_rank">1</field>
+            <!-- customer_rank > 0 marca este contacto como cliente -->
+            <field name="street">Av. Constitución 123</field>
+            <field name="city">Monterrey</field>
+            <field name="zip">64000</field>
+            <field name="country_id" ref="base.mx"/>
+            <field name="phone">+52 81 1234 5678</field>
+            <field name="email">contacto@transportesnorte.com</field>
+        </record>
+
+        <!--
+            Chofer Demo: Juan Pérez
+        -->
+        <record id="partner_driver_juan" model="res.partner">
+            <field name="name">Juan Pérez</field>
+            <field name="street">Calle Hidalgo 456</field>
+            <field name="city">Monterrey</field>
+            <field name="phone">+52 81 9876 5432</field>
+            <field name="email">juan.perez@example.com</field>
+        </record>
+
+    </data>
+</odoo>
+

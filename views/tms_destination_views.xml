@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        ================================================================
+        VISTAS DE RUTAS COMERCIALES (Punto A -> Punto B)
+        ================================================================
+        Modelo: tms.destination
+        Uso: Gestionar rutas frecuentes de la empresa
+    -->
+
+    <!-- Vista List (Lista) -->
+    <record id="view_tms_destination_tree" model="ir.ui.view">
+        <field name="name">tms.destination.tree</field>
+        <field name="model">tms.destination</field>
+        <field name="arch" type="xml">
+            <list string="Rutas Comerciales">
+                <!-- Columna: Nombre de la ruta -->
+                <field name="name"/>
+
+                <!-- Columna: Estado Origen -->
+                <field name="state_origin_id"/>
+
+                <!-- Columna: Estado Destino -->
+                <field name="state_dest_id"/>
+
+                <!-- Columna: Distancia -->
+                <field name="distance_km" sum="Total Km"/>
+
+                <!-- Columna: Duración -->
+                <field name="duration_hours" optional="show"/>
+
+                <!-- Columna: Costo Casetas -->
+                <field name="toll_cost" widget="monetary" optional="show"/>
+
+                <!-- Columna: Activa -->
+                <field name="active" widget="boolean_toggle"/>
+
+                <!-- Campo oculto: compañía (para multi-empresa) -->
+                <field name="company_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Form (Formulario) -->
+    <record id="view_tms_destination_form" model="ir.ui.view">
+        <field name="name">tms.destination.form</field>
+        <field name="model">tms.destination</field>
+        <field name="arch" type="xml">
+            <form string="Ruta Comercial">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="ej: Jalisco - CDMX"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <!-- Primera columna: Origen -->
+                        <group string="Origen">
+                            <field name="state_origin_id" required="1" options="{'no_create': True, 'no_open': True}"/>
+                        </group>
+
+                        <!-- Segunda columna: Destino -->
+                        <group string="Destino">
+                            <field name="state_dest_id" required="1" options="{'no_create': True, 'no_open': True}"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Información de Ruta">
+                            <!-- Campo: Distancia en KM -->
+                            <field name="distance_km"/>
+
+                            <!-- Campo: Duración estimada -->
+                            <field name="duration_hours"/>
+
+                            <!-- Campo: Costo de casetas -->
+                            <field name="toll_cost"/>
+
+                            <!-- Campo: Activa -->
+                            <field name="active"/>
+                        </group>
+
+                        <group string="Empresa">
+                            <!-- Campo: Compañía (solo visible en multi-empresa) -->
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <!-- Campo: Notas (ancho completo) -->
+                        <field name="notes" placeholder="Observaciones sobre carreteras, casetas, etc."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista Search (Búsqueda) -->
+    <record id="view_tms_destination_search" model="ir.ui.view">
+        <field name="name">tms.destination.search</field>
+        <field name="model">tms.destination</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Rutas">
+                <field name="name"/>
+                <field name="state_origin_id"/>
+                <field name="state_dest_id"/>
+
+                <!-- Filtro: Solo rutas activas -->
+                <filter name="filter_active" string="Activas"
+                        domain="[('active', '=', True)]"/>
+
+                <!-- Agrupación por origen -->
+                <group expand="0" string="Agrupar Por">
+                    <filter name="group_origin" string="Estado Origen"
+                            context="{'group_by': 'state_origin_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action (Acción de Ventana) -->
+    <record id="action_tms_destination" model="ir.actions.act_window">
+        <field name="name">Rutas Comerciales</field>
+        <field name="res_model">tms.destination</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crear una nueva ruta comercial
+            </p>
+            <p>
+                Define rutas frecuentes (Punto A -> Punto B) con distancias, duraciones y costos de casetas estimados.
+                Al seleccionar una ruta en un viaje, se auto-llenan origen, destino, distancia y duración.
+            </p>
+        </field>
+    </record>
+
+</odoo>

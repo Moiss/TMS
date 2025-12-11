@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sat_municipio_tree" model="ir.ui.view">
+        <field name="name">tms.sat.municipio.tree</field>
+        <field name="model">tms.sat.municipio</field>
+        <field name="arch" type="xml">
+            <list string="Municipios SAT">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="estado"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_sat_municipio" model="ir.actions.act_window">
+        <field name="name">Municipios SAT</field>
+        <field name="res_model">tms.sat.municipio</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
+

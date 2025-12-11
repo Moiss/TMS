@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista Tree: Embalaje -->
+    <record id="view_sat_embalaje_tree" model="ir.ui.view">
+        <field name="name">tms.sat.embalaje.tree</field>
+        <field name="model">tms.sat.embalaje</field>
+        <field name="arch" type="xml">
+            <list string="Tipo de Embalaje SAT">
+                <field name="code"/>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Search: Embalaje -->
+    <record id="view_sat_embalaje_search" model="ir.ui.view">
+        <field name="name">tms.sat.embalaje.search</field>
+        <field name="model">tms.sat.embalaje</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Embalaje SAT">
+                <field name="code"/>
+                <field name="name"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action: Embalaje -->
+    <record id="action_sat_embalaje" model="ir.actions.act_window">
+        <field name="name">Tipo de Embalaje SAT</field>
+        <field name="res_model">tms.sat.embalaje</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>
+

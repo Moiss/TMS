@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista Tree: Código Postal -->
+    <record id="view_sat_codigo_postal_tree" model="ir.ui.view">
+        <field name="name">tms.sat.codigo.postal.tree</field>
+        <field name="model">tms.sat.codigo.postal</field>
+        <field name="arch" type="xml">
+            <list string="Códigos Postales SAT">
+                <field name="code"/>
+                <field name="estado"/>
+                <field name="municipio"/>
+                <field name="localidad"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Search -->
+    <record id="view_sat_codigo_postal_search" model="ir.ui.view">
+        <field name="name">tms.sat.codigo.postal.search</field>
+        <field name="model">tms.sat.codigo.postal</field>
+        <field name="arch" type="xml">
+            <search string="Buscar CP">
+                <field name="code"/>
+                <field name="estado"/>
+                <field name="municipio"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_sat_codigo_postal" model="ir.actions.act_window">
+        <field name="name">Códigos Postales SAT</field>
+        <field name="res_model">tms.sat.codigo.postal</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>
+

@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ======================= -->
+    <!-- VISTA KANBAN (DASHBOARD) -->
+    <!-- ======================= -->
+    <record id="view_tms_waybill_kanban" model="ir.ui.view">
+        <field name="name">tms.waybill.kanban</field>
+        <field name="model">tms.waybill</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state"
+                    class="o_kanban_small_column"
+                    records_draggable="true">
+                <field name="name"/>
+                <field name="state"/>
+                <field name="currency_id"/>
+                <field name="waybill_type"/>
+                <field name="partner_invoice_id"/>
+                <field name="amount_total"/>
+                <field name="route_name"/>
+                <field name="date_created"/>
+
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_record_top mb-2">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="name"/>
+                                    </strong>
+                                    <div class="text-muted">
+                                        <field name="partner_invoice_id"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <span class="badge text-bg-success">
+                                    <field name="amount_total" widget="monetary"/>
+                                </span>
+                                <div class="text-muted small mt-1">
+                                    <field name="route_name"/>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_bottom mt-2">
+                                <div class="oe_kanban_bottom_left">
+                                    <span class="text-muted small">
+                                        <field name="date_created"/>
+                                    </span>
+                                </div>
+                                <div class="oe_kanban_bottom_right">
+                                    <t t-if="record.waybill_type.raw_value == 'income'">
+                                        <span class="badge text-bg-info">
+                                            Ingreso
+                                        </span>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ======================= -->
+    <!-- VISTA LIST (TABLA) -->
+    <!-- ======================= -->
+    <record id="view_tms_waybill_tree" model="ir.ui.view">
+        <field name="name">tms.waybill.list</field>
+        <field name="model">tms.waybill</field>
+        <field name="arch" type="xml">
+            <list string="Viajes">
+                <field name="name"/>
+                <field name="date_created"/>
+                <field name="partner_invoice_id"/>
+                <field name="route_name"/>
+                <field name="vehicle_id"/>
+                <field name="driver_id"/>
+                <field name="amount_total" widget="monetary"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'request'"
+                       decoration-success="state == 'invoiced'"/>
+                <field name="company_id" column_invisible="True"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ======================= -->
+    <!-- FORMULARIO CON COTIZADOR (SIN CHATTER) -->
+    <!-- ======================= -->
+    <record id="view_tms_waybill_form" model="ir.ui.view">
+        <field name="name">tms.waybill.form</field>
+        <field name="model">tms.waybill</field>
+        <field name="arch" type="xml">
+            <form string="Viaje">
+                <header>
+                    <button name="action_set_en_pedido"
+                            string="Confirmar Pedido"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve_cp" string="Generar Carta Porte"
+                            type="object" class="oe_highlight"
+                            invisible="state != 'assigned'"/>
+                    <button name="action_start_route_manual" string="Iniciar Ruta"
+                            type="object" class="oe_highlight"
+                            invisible="state != 'carta_porte'"/>
+                    <button name="action_arrived_dest_manual" string="Registrar Llegada"
+                            type="object" class="oe_highlight"
+                            invisible="state != 'transit'"/>
+                    <button name="action_create_invoice" string="Facturar"
+                            type="object" class="oe_highlight"
+                            invisible="state != 'destination'"/>
+
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="draft,en_pedido,assigned,waybill,in_transit,arrived,closed"
+                           statusbar_colors="draft:grey;en_pedido:blue;assigned:orange;waybill:green;in_transit:purple;arrived:teal;closed:black"/>
+                </header>
+
+                <sheet>
+                    <!-- Título -->
+                    <div class="oe_title">
+                        <label for="name" string="Folio"/>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <!-- Datos generales + resumen de precio -->
+                    <group>
+                        <group>
+                        <group invisible="state in ['draft','en_pedido']">
+                            <field name="cp_type"/>
+                        </group>
+                            <field name="date_created"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+
+                            <!-- Movid: Búsqueda de Rutas -->
+                            <group string="Búsqueda de Rutas">
+                                <field name="state_origin_search_id"/>
+                                <field name="state_dest_search_id"/>
+                            </group>
+                        </group>
+                        <group>
+                            <label for="amount_total" string="Precio Final"/>
+                            <h2>
+                                <field name="amount_total" widget="monetary"/>
+                            </h2>
+                            <!-- Etiqueta de qué propuesta quedó seleccionada -->
+                            <field name="selected_proposal" widget="label" class="text-muted"/>
+
+                            <!-- Movid: Ruta -->
+                            <group string="Ruta">
+                                <!-- Selector de Ruta con Dominio Dinámico -->
+                                <field name="route_id"
+                                       placeholder="Selecciona una ruta..."
+                                       domain="[
+                                           ('state_origin_id', '=?', state_origin_search_id),
+                                           ('state_dest_id', '=?', state_dest_search_id)
+                                       ]"/>
+                                <field name="distance_km"/>
+                                <field name="duration_hours" widget="float_time"/>
+                                <field name="toll_cost" widget="monetary"/>
+                            </group>
+
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <!-- ======================= -->
+                        <!-- INFO GENERAL -->
+                        <!-- ======================= -->
+                        <page string="Información General">
+                            <group>
+                                <group string="Facturación">
+                                    <field name="partner_invoice_id"/>
+                                    <field name="invoice_rfc" readonly="1"/>
+                                    <field name="invoice_address" readonly="1"/>
+                                </group>
+                            </group>
+                            <group col="2">
+                                <group string="Origen">
+                                    <field name="partner_origin_id"/>
+                                    <field name="origin_state_id"/>
+                                    <field name="origin_address"/>
+                                    <field name="origin_zip"/>
+                                    <field name="origin_rfc"/>
+                                </group>
+                                <group string="Destino">
+                                    <field name="partner_dest_id"/>
+                                    <field name="dest_state_id"/>
+                                    <field name="dest_address"/>
+                                    <field name="dest_zip"/>
+                                    <field name="dest_rfc"/>
+                                </group>
+                            </group>
+                            <!-- Nota: origin_city_id y dest_city_id se auto-llenan al seleccionar route_id -->
+                        </page>
+
+                        <!-- ======================= -->
+                        <!-- COTIZACIÓN Y COSTOS (SIEMPRE VISIBLE) -->
+                        <!-- ======================= -->
+                        <page string="Cotización y Costos">
+                            <group>
+                                <group string="Variables de Costo">
+                                    <field name="fuel_price_liter"/>
+                                    <field name="fuel_performance"/>
+                                    <field name="cost_tolls"/>
+                                    <field name="cost_driver"/>
+                                    <field name="cost_maneuver"/>
+                                    <field name="cost_other"/>
+                                    <field name="cost_diesel_total" readonly="1"/>
+                                </group>
+                                <group string="Selección de Propuesta">
+                                    <!-- label con 'for' para Odoo 18 -->
+                                    <label for="selected_proposal"
+                                           string="Selecciona la propuesta que se aplicará al cliente."
+                                           class="o_form_label text-muted"/>
+                                    <field name="selected_proposal" widget="radio"/>
+                                </group>
+                            </group>
+
+                            <separator string="Comparativa de Propuestas"/>
+
+                            <group col="3">
+                                <!-- Opción A: Por KM -->
+                                <group string="🅰️ Por Kilómetro">
+                                    <field name="price_per_km"/>
+                                    <label for="distance_km" string="Distancia Total"/>
+                                    <div class="o_row">
+                                        <field name="distance_km" class="oe_inline" readonly="1"/> km base +
+                                        <field name="extra_distance_km" class="oe_inline"/> km extras
+                                    </div>
+                                    <p class="text-muted small" style="margin-top: 5px;">
+                                        <i class="fa fa-info-circle"/> Los km extras se suman a la distancia base para el cobro
+                                    </p>
+                                    <field name="proposal_km_total" widget="monetary" readonly="1" decoration-bf="1"/>
+                                </group>
+
+                                <!-- Opción B: Por Viaje -->
+                                <group string="Por Costo + Margen">
+                                    <field name="profit_margin_percent"/>
+                                    <field name="proposal_trip_total" widget="monetary" readonly="1"/>
+                                </group>
+
+                                <!-- Opción C: Directa -->
+                                <group string="Precio Directo">
+                                    <field name="proposal_direct_amount" widget="monetary"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- ======================= -->
+                        <!-- MERCANCÍAS             -->
+                        <!-- ======================= -->
+                        <page string="Mercancías">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="product_sat_id"/>
+                                    <field name="description"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_sat_id"/>
+                                    <field name="weight_kg"/>
+                                    <field name="dimensions"/>
+                                    <field name="is_dangerous"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- ======================= -->
+                        <!-- OPERACIÓN              -->
+                        <!-- ======================= -->
+                        <page string="Operación">
+                            <group col="3">
+                                <field name="vehicle_id"/>
+                                <field name="driver_id"/>
+                                <field name="trailer1_id"/>
+                                <field name="trailer2_id"/>
+                            </group>
+                        </page>
+
+                        <!-- ======================= -->
+                        <!-- BITÁCORA GPS           -->
+                        <!-- ======================= -->
+                        <page string="Bitácora GPS">
+                            <group col="3">
+                                <group string="Origen">
+                                    <field name="date_arrived_origin"/>
+                                    <field name="lat_arrived_origin"/>
+                                    <field name="long_arrived_origin"/>
+                                </group>
+                                <group string="Ruta">
+                                    <field name="date_started_route"/>
+                                    <field name="lat_started_route"/>
+                                    <field name="long_started_route"/>
+                                </group>
+                                <group string="Destino">
+                                    <field name="date_arrived_dest"/>
+                                    <field name="lat_arrived_dest"/>
+                                    <field name="long_arrived_dest"/>
+                                </group>
+                            </group>
+                            <group string="Tracking en Vivo">
+                                <field name="last_report_date"/>
+                                <field name="last_app_lat"/>
+                                <field name="last_app_long"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ======================= -->
+    <!-- SEARCH Y ACTION -->
+    <!-- ======================= -->
+    <record id="view_tms_waybill_search" model="ir.ui.view">
+        <field name="name">tms.waybill.search</field>
+        <field name="model">tms.waybill</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_invoice_id"/>
+                <filter name="filter_request" string="Solicitudes"
+                        domain="[('state', '=', 'request')]"/>
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Estado" name="group_by_state"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_tms_waybill" model="ir.actions.act_window">
+        <field name="name">Viajes / Tablero</field>
+        <field name="res_model">tms.waybill</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_tms_waybill_search"/>
+        <field name="context">{'search_default_group_by_state': 1}</field>
+    </record>
+
+</odoo>

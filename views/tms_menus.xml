@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        ================================================================
+        ESTRUCTURA COMPLETA DE MENÚS TMS
+        ================================================================
+        Autor: nextpack.mx
+        Módulo: TMS & Carta Porte 3.1
+    -->
+
+    <!-- ==================================================== -->
+    <!-- 1. DEFINICIÓN DEL MENÚ RAÍZ (PRIMERO QUE NADA) -->
+    <!-- ==================================================== -->
+    <menuitem id="menu_tms_root"
+              name="TMS"
+              web_icon="tms,static/description/icon.png"
+              action="action_tms_home"
+              sequence="5"/>
+    <!--
+        Este es el MENÚ RAÍZ de la aplicación
+        - name="TMS": Nombre que aparece en la barra superior de Odoo
+        - web_icon: Icono de la app (icon.png en static/description/)
+        - action: Al hacer clic en TMS, abre el dashboard (action_tms_home)
+        - sequence="5": Posición en la barra superior
+    -->
+
+    <!-- ==================================================== -->
+    <!-- 2. MENÚS DE NIVEL 1 (HIJOS DIRECTOS DE RAÍZ) -->
+    <!-- ==================================================== -->
+
+    <!-- Dashboard -->
+    <menuitem id="menu_tms_dashboard"
+              name="Dashboard"
+              parent="menu_tms_root"
+              action="action_tms_home"
+              sequence="1"/>
+
+    <!-- Operaciones -->
+    <menuitem id="menu_tms_operations"
+              name="Operaciones"
+              parent="menu_tms_root"
+              sequence="10"/>
+
+    <!-- Configuración -->
+    <menuitem id="menu_tms_config"
+              name="Configuración"
+              parent="menu_tms_root"
+              sequence="99"/>
+
+    <!-- ==================================================== -->
+    <!-- 3. SUBMENÚS DE OPERACIONES -->
+    <!-- ==================================================== -->
+
+    <!-- Viajes / Tablero (Dashboard Principal) -->
+    <menuitem id="menu_tms_waybill"
+              name="Viajes / Tablero"
+              parent="menu_tms_operations"
+              action="action_tms_waybill"
+              sequence="5"/>
+
+    <!-- Vehículos (Tractores) -->
+    <menuitem id="menu_tms_vehicles"
+              name="Vehículos"
+              parent="menu_tms_operations"
+              action="action_tms_vehicles"
+              sequence="10"/>
+
+    <!-- Remolques -->
+    <menuitem id="menu_tms_trailers"
+              name="Remolques"
+              parent="menu_tms_operations"
+              action="action_tms_trailers"
+              sequence="20"/>
+
+    <!-- Destinos/Rutas -->
+    <menuitem id="menu_tms_destinations"
+              name="Destinos"
+              parent="menu_tms_operations"
+              action="action_tms_destination"
+              sequence="30"/>
+
+    <!--
+        NOTA: El menú "Configuración" y sus submenús de Catálogos SAT
+        se definen en sat_menus.xml
+    -->
+
+</odoo>

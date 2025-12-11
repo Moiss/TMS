@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista Tree: Clave Unidad -->
+    <record id="view_sat_clave_unidad_tree" model="ir.ui.view">
+        <field name="name">tms.sat.clave.unidad.tree</field>
+        <field name="model">tms.sat.clave.unidad</field>
+        <field name="arch" type="xml">
+            <list string="Clave Unidad SAT">
+                <field name="code"/>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Search: Clave Unidad -->
+    <record id="view_sat_clave_unidad_search" model="ir.ui.view">
+        <field name="name">tms.sat.clave.unidad.search</field>
+        <field name="model">tms.sat.clave.unidad</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Unidad SAT">
+                <field name="code"/>
+                <field name="name"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action: Clave Unidad -->
+    <record id="action_sat_clave_unidad" model="ir.actions.act_window">
+        <field name="name">Clave Unidad SAT</field>
+        <field name="res_model">tms.sat.clave.unidad</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>
+

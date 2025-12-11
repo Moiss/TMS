@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ================================================================
+    PLANTILLAS DEL PORTAL WEB PARA FIRMA DIGITAL DE COTIZACIONES
+    ================================================================
+
+    ¿QUÉ HACE ESTE ARCHIVO?
+    - Define la interfaz web que ven los clientes en el portal
+    - Permite que los clientes vean sus cotizaciones y las firmen digitalmente
+    - Usa portal.portal_layout para mantener el diseño estándar de Odoo
+
+    ESTRUCTURA:
+    - Plantilla principal: portal_my_waybill (llama a portal.portal_layout con t-call)
+    - Muestra información de la cotización (origen, destino, mercancías, precios)
+    - Incluye widget de firma digital (t-call="portal.signature_form")
+    - Formulario POST que envía la firma a /my/waybills/<id>/sign
+
+    SEGURIDAD SAAS:
+    - El controlador (controllers/portal.py) valida que waybill.company_id == request.env.company
+    - Si no coincide, lanza NotFound (404)
+    - Esto garantiza que cada empresa solo vea sus propias cotizaciones
+-->
+<odoo>
+    <!--
+        ================================================================
+        PLANTILLA PRINCIPAL: DETALLE DE COTIZACIÓN EN EL PORTAL
+        ================================================================
+
+        IMPORTANTE: Esta es una plantilla INDEPENDIENTE (NO usa inherit_id).
+        En Odoo, las plantillas del portal deben usar <t t-call="portal.portal_layout">
+        en lugar de inherit_id="portal.portal_layout".
+
+        ESTRUCTURA CORRECTA:
+        - template id: Define el ID externo (portal_my_waybill)
+        - t-name: Define el nombre interno (tms.portal_my_waybill)
+        - t-call: Llama a portal.portal_layout para obtener el layout base
+        - Contenido: Se inserta dentro del layout base automáticamente
+
+        CONTEXTO RECIBIDO:
+        - waybill: Objeto tms.waybill completo (pasado desde el controlador)
+        - page_name: Nombre de la página (para breadcrumbs)
+    -->
+    <template id="portal_my_waybill" name="My Waybill">
+        <!--
+            t-name: Nombre interno de la plantilla (debe coincidir con el ID externo)
+            Este nombre se usa en el controlador: request.render('tms.portal_my_waybill', values)
+        -->
+        <t t-name="tms.portal_my_waybill">
+            <!--
+                t-call: Llama a la plantilla base del portal (portal.portal_layout)
+                Esto renderiza el layout estándar de Odoo (header, sidebar, footer, breadcrumbs)
+                El contenido que pongamos aquí se inserta automáticamente en el área principal
+            -->
+            <t t-call="portal.portal_layout">
+                <!--
+                    Contenedor principal de la página
+                    class="container": Bootstrap container (responsive)
+                    Este div se inserta automáticamente en el área principal del layout
+                -->
+                <div class="container">
+                    <!--
+                        ================================================================
+                        ENCABEZADO: LOGO Y FOLIO DE LA COTIZACIÓN
+                        ================================================================
+                    -->
+                    <div class="row mb-4">
+                        <!--
+                            Columna izquierda: Logo de la empresa
+                            class="col-md-3": 3 columnas de 12 (25% del ancho)
+                        -->
+                        <div class="col-md-3">
+                            <!--
+                                t-if: Condicional - Solo muestra si waybill.company_id.logo existe
+                                waybill.company_id.logo: Logo binario de la empresa
+                            -->
+                            <t t-if="waybill.company_id.logo">
+                                <!--
+                                    img: Imagen del logo
+                                    t-attf-src: Atributo dinámico (data:image/png;base64,...)
+                                    style="max-width: 200px": Limita el ancho máximo
+                                -->
+                                <img t-attf-src="data:image/png;base64,{{ waybill.company_id.logo }}"
+                                     alt="Logo"
+                                     class="img-fluid"
+                                     style="max-width: 200px;"/>
+                            </t>
+                        </div>
+                        <!--
+                            Columna derecha: Información de la cotización
+                            class="col-md-9": 9 columnas de 12 (75% del ancho)
+                        -->
+                        <div class="col-md-9">
+                            <!--
+                                h2: Título principal
+                                t-esc: Escapa HTML (previene XSS)
+                                waybill.name: Folio de la cotización (ej: "VJ/00001")
+                            -->
+                            <h2>Cotización <t t-esc="waybill.name"/></h2>
+                            <!--
+                                p: Párrafo con fecha
+                                waybill.date_created: Fecha de creación (formato Date)
+                            -->
+                            <p class="text-muted">
+                                Fecha: <t t-esc="waybill.date_created"/>
+                            </p>
+                            <!--
+                                t-if: Solo muestra si waybill.state == 'request'
+                                Esto oculta el widget de firma si ya fue firmada
+                            -->
+                            <t t-if="waybill.state == 'request'">
+                                <!--
+                                    alert alert-info: Mensaje informativo de Bootstrap
+                                -->
+                                <div class="alert alert-info" role="alert">
+                                    <strong>Estado:</strong> Solicitud pendiente de firma
+                                </div>
+                            </t>
+                            <!--
+                                t-elif: Si el estado es 'confirmed' (ya firmada)
+                            -->
+                            <t t-elif="waybill.state == 'confirmed'">
+                                <div class="alert alert-success" role="alert">
+                                    <strong>✅ Cotización Firmada</strong>
+                                    <t t-if="waybill.signed_by">
+                                        por <t t-esc="waybill.signed_by"/>
+                                    </t>
+                                    <t t-if="waybill.signed_on">
+                                        el <t t-esc="waybill.signed_on"/>
+                                    </t>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!--
+                        ================================================================
+                        SECCIÓN 1: INFORMACIÓN DE RUTA (ORIGEN Y DESTINO)
+                        ================================================================
+                    -->
+                    <div class="row mb-4">
+                        <!--
+                            Columna izquierda: Origen
+                            class="col-md-6": 6 columnas de 12 (50% del ancho)
+                        -->
+                        <div class="col-md-6">
+                            <!--
+                                card: Tarjeta de Bootstrap (contenedor con borde)
+                            -->
+                            <div class="card">
+                                <!--
+                                    card-header: Encabezado de la tarjeta
+                                    bg-primary text-white: Fondo azul, texto blanco
+                                -->
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">📍 Origen</h5>
+                                </div>
+                                <!--
+                                    card-body: Cuerpo de la tarjeta (contenido)
+                                -->
+                                <div class="card-body">
+                                    <!--
+                                        t-if: Solo muestra si waybill.partner_origin_id existe
+                                        waybill.partner_origin_id.name: Nombre del cliente origen
+                                    -->
+                                    <t t-if="waybill.partner_origin_id">
+                                        <p><strong>Cliente:</strong> <t t-esc="waybill.partner_origin_id.name"/></p>
+                                    </t>
+                                    <!--
+                                        t-if: Solo muestra si waybill.origin_city_id existe
+                                        waybill.origin_city_id.name: Nombre del municipio origen
+                                    -->
+                                    <t t-if="waybill.origin_city_id">
+                                        <p><strong>Ciudad:</strong> <t t-esc="waybill.origin_city_id.name"/></p>
+                                    </t>
+                                    <!--
+                                        t-if: Solo muestra si waybill.origin_address existe
+                                        waybill.origin_address: Dirección completa del origen
+                                    -->
+                                    <t t-if="waybill.origin_address">
+                                        <p><strong>Dirección:</strong> <t t-esc="waybill.origin_address"/></p>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                        <!--
+                            Columna derecha: Destino
+                            Misma estructura que Origen
+                        -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0">🏁 Destino</h5>
+                                </div>
+                                <div class="card-body">
+                                    <t t-if="waybill.partner_dest_id">
+                                        <p><strong>Cliente:</strong> <t t-esc="waybill.partner_dest_id.name"/></p>
+                                    </t>
+                                    <t t-if="waybill.dest_city_id">
+                                        <p><strong>Ciudad:</strong> <t t-esc="waybill.dest_city_id.name"/></p>
+                                    </t>
+                                    <t t-if="waybill.dest_address">
+                                        <p><strong>Dirección:</strong> <t t-esc="waybill.dest_address"/></p>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--
+                        ================================================================
+                        SECCIÓN 2: MERCADERÍAS (LÍNEAS DE PRODUCTOS)
+                        ================================================================
+                    -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">📦 Mercancías</h5>
+                                </div>
+                                <div class="card-body">
+                                    <!--
+                                        t-if: Solo muestra si waybill.line_ids existe y tiene registros
+                                        waybill.line_ids: One2many con las líneas de productos
+                                    -->
+                                    <t t-if="waybill.line_ids">
+                                        <!--
+                                            table: Tabla HTML estándar
+                                            class="table table-striped": Bootstrap table con filas alternadas
+                                        -->
+                                        <table class="table table-striped">
+                                            <!--
+                                                thead: Encabezado de la tabla
+                                            -->
+                                            <thead>
+                                                <tr>
+                                                    <th>Producto SAT</th>
+                                                    <th>Descripción</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Peso (Kg)</th>
+                                                </tr>
+                                            </thead>
+                                            <!--
+                                                tbody: Cuerpo de la tabla
+                                                t-foreach: Itera sobre cada línea en waybill.line_ids
+                                                line: Variable temporal para cada iteración
+                                            -->
+                                            <tbody>
+                                                <t t-foreach="waybill.line_ids" t-as="line">
+                                                    <tr>
+                                                        <!--
+                                                            t-esc: Escapa HTML (seguridad XSS)
+                                                            line.product_sat_id.name: Nombre del producto SAT
+                                                        -->
+                                                        <td><t t-esc="line.product_sat_id.name or ''"/></td>
+                                                        <td><t t-esc="line.description or ''"/></td>
+                                                        <td><t t-esc="line.quantity or 0"/></td>
+                                                        <td><t t-esc="line.weight_kg or 0"/></td>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </t>
+                                    <!--
+                                        t-else: Si no hay líneas, muestra mensaje
+                                    -->
+                                    <t t-else="">
+                                        <p class="text-muted">No hay mercancías registradas.</p>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--
+                        ================================================================
+                        SECCIÓN 3: RESUMEN FINANCIERO (PRECIOS Y COSTOS)
+                        ================================================================
+                    -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">💰 Resumen Financiero</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <!--
+                                            Columna izquierda: Información de ruta
+                                        -->
+                                        <div class="col-md-6">
+                                            <t t-if="waybill.distance_km">
+                                                <p><strong>Distancia:</strong> <t t-esc="waybill.distance_km"/> km</p>
+                                            </t>
+                                            <t t-if="waybill.duration_hours">
+                                                <p><strong>Duración Estimada:</strong> <t t-esc="waybill.duration_hours"/> horas</p>
+                                            </t>
+                                        </div>
+                                        <!--
+                                            Columna derecha: Monto total
+                                        -->
+                                        <div class="col-md-6 text-right">
+                                            <!--
+                                                h3: Título grande para el monto
+                                                t-esc: Formatea el monto con la moneda
+                                                waybill.amount_total: Monto total de la cotización
+                                                waybill.currency_id.symbol: Símbolo de la moneda ($, €, etc.)
+                                            -->
+                                            <h3>
+                                                <strong>Total: <t t-esc="waybill.currency_id.symbol or ''"/><t t-esc="waybill.amount_total or 0"/></strong>
+                                            </h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--
+                        ================================================================
+                        SECCIÓN 4: WIDGET DE FIRMA DIGITAL
+                        ================================================================
+                        Solo visible si el estado es 'request' (pendiente de firma)
+                    -->
+                    <t t-if="waybill.state == 'request'">
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header bg-warning">
+                                        <h5 class="mb-0">✍️ Firma Digital</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <!--
+                                            p: Instrucciones para el usuario
+                                        -->
+                                        <p class="mb-3">
+                                            Por favor, firma esta cotización digitalmente para confirmar tu aceptación.
+                                        </p>
+                                        <!--
+                                            t-call: Llama al widget estándar de firma de Odoo
+                                            portal.signature_form: Widget nativo que incluye:
+                                            - Canvas para dibujar la firma
+                                            - Campo de texto para el nombre
+                                            - Botón de envío
+                                        -->
+                                        <t t-call="portal.signature_form">
+                                            <!--
+                                                xpath: Personaliza el formulario de firma
+                                                expr="//form": Busca el elemento <form>
+                                                position="attributes": Modifica atributos del form
+                                            -->
+                                            <xpath expr="//form" position="attributes">
+                                                <!--
+                                                    t-attf-action: Atributo dinámico para la acción del formulario
+                                                    Forma la URL: /my/waybills/<id>/sign
+                                                    waybill.id: ID numérico del waybill
+                                                -->
+                                                <attribute name="action" t-attf-value="/my/waybills/{{ waybill.id }}/sign"/>
+                                                <!--
+                                                    method="post": Método HTTP POST (envía datos al servidor)
+                                                -->
+                                                <attribute name="method">post</attribute>
+                                            </xpath>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!--
+                        ================================================================
+                        SECCIÓN 5: FIRMA EXISTENTE (Si ya fue firmada)
+                        ================================================================
+                        Solo visible si el estado es 'confirmed' y existe firma
+                    -->
+                    <t t-if="waybill.state == 'confirmed' and waybill.signature">
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0">✅ Firma Digital Registrada</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <!--
+                                            t-if: Solo muestra si waybill.signature existe
+                                            waybill.signature: Imagen binaria de la firma (base64)
+                                        -->
+                                        <t t-if="waybill.signature">
+                                            <!--
+                                                img: Muestra la imagen de la firma
+                                                t-attf-src: Atributo dinámico (data:image/png;base64,...)
+                                                style="max-width: 400px": Limita el ancho máximo
+                                            -->
+                                            <img t-attf-src="data:image/png;base64,{{ waybill.signature }}"
+                                                 alt="Firma Digital"
+                                                 class="img-fluid border"
+                                                 style="max-width: 400px; background: white;"/>
+                                        </t>
+                                        <!--
+                                            Información de quién y cuándo firmó
+                                        -->
+                                        <div class="mt-3">
+                                            <t t-if="waybill.signed_by">
+                                                <p><strong>Firmado por:</strong> <t t-esc="waybill.signed_by"/></p>
+                                            </t>
+                                            <t t-if="waybill.signed_on">
+                                                <p><strong>Fecha y hora:</strong> <t t-esc="waybill.signed_on"/></p>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

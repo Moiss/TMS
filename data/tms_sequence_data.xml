@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!--
+            Secuencia para Folios de Viajes / Cartas Porte
+
+            MODELO MAESTRO: tms.waybill (fusiona Cotización + Viaje)
+
+            FORMATO: VJ/00001, VJ/00002, VJ/00003, etc.
+            - VJ = Viaje
+            - Padding de 5 dígitos
+
+            company_id=False: Compartida entre empresas (cada empresa tiene su numeración)
+        -->
+        <record id="sequence_tms_waybill" model="ir.sequence">
+            <field name="name">Secuencia de Viajes TMS</field>
+            <field name="code">tms.waybill</field>
+            <field name="prefix">VJ/</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

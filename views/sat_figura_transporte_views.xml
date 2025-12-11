@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sat_figura_transporte_tree" model="ir.ui.view">
+        <field name="name">tms.sat.figura.transporte.tree</field>
+        <field name="model">tms.sat.figura.transporte</field>
+        <field name="arch" type="xml">
+            <list string="Figuras de Transporte SAT">
+                <field name="code"/>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_sat_figura_transporte" model="ir.actions.act_window">
+        <field name="name">Figuras de Transporte SAT</field>
+        <field name="res_model">tms.sat.figura.transporte</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
+

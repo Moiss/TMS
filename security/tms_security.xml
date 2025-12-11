@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!--
+            ================================================================
+            GRUPOS DE SEGURIDAD
+            ================================================================
+        -->
+
+        <!-- Categoría del módulo TMS -->
+        <record id="module_category_tms" model="ir.module.category">
+            <field name="name">TMS - Transporte</field>
+            <field name="description">Permisos para gestión de transporte y flota</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- Grupo: Usuario TMS -->
+        <record id="group_tms_user" model="res.groups">
+            <field name="name">Usuario TMS</field>
+            <field name="category_id" ref="module_category_tms"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <!-- Grupo: Manager TMS -->
+        <record id="group_tms_manager" model="res.groups">
+            <field name="name">Manager TMS</field>
+            <field name="category_id" ref="module_category_tms"/>
+            <field name="implied_ids" eval="[(4, ref('group_tms_user'))]"/>
+        </record>
+
+        <!--
+            ================================================================
+            RECORD RULES - AISLAMIENTO MULTI-EMPRESA (CRÍTICO PARA SAAS)
+            ================================================================
+
+            Las Record Rules son el CORAZÓN del sistema SaaS multi-empresa.
+
+            ¿QUÉ HACEN?
+            - Filtran automáticamente TODOS los registros según la empresa del usuario
+            - Se aplican a TODAS las consultas (search, read, write, unlink)
+            - Son TRANSPARENTES para el código (no necesitas agregar filtros manualmente)
+
+            EJEMPLO PRÁCTICO:
+            - Usuario Juan (Empresa "Transportes A")
+            - Usuario María (Empresa "Transportes B")
+            - Juan hace: self.env['tms.destination'].search([])
+            - Automáticamente la Record Rule filtra: [('company_id', 'in', [ID_Empresa_A])]
+            - Juan SOLO ve destinos de Transportes A
+            - María SOLO ve destinos de Transportes B
+            - Aislamiento completo sin código adicional
+        -->
+
+        <!--
+            Record Rule: Destinos por Empresa
+
+            DOMINIO EXPLICADO:
+            ['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]
+
+            Desglose:
+            - '|' = Operador OR
+            - ('company_id', '=', False) = Registros sin empresa (globales)
+            - ('company_id', 'in', company_ids) = Registros de las empresas del usuario
+
+            ¿Qué es company_ids?
+            - Variable especial de Odoo
+            - Lista de IDs de empresas a las que el usuario tiene acceso
+            - Si usuario solo tiene acceso a Empresa A (ID=1): company_ids = [1]
+            - Si usuario tiene acceso a A y B: company_ids = [1, 2]
+
+            Resultado:
+            - El usuario ve registros sin empresa O registros de sus empresas
+            - NO ve registros de otras empresas
+        -->
+        <record id="tms_destination_company_rule" model="ir.rule">
+            <field name="name">Destinos: Aislamiento Multi-Empresa</field>
+            <field name="model_id" ref="model_tms_destination"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+            <field name="global" eval="True"/>
+        </record>
+
+        <!--
+            Record Rule: Fleet Vehicles por Empresa
+
+            IMPORTANTE: El módulo fleet NATIVO ya tiene sus propias record rules,
+            pero agregamos esta para REFORZAR el filtro por empresa.
+
+            ¿POR QUÉ?
+            - Asegura que los vehículos también respeten company_id
+            - Importante para los remolques (trailer1_id, trailer2_id)
+            - Un tractor de Empresa A NO puede vincularse con remolque de Empresa B
+        -->
+        <record id="fleet_vehicle_company_rule_tms" model="ir.rule">
+            <field name="name">Vehículos TMS: Aislamiento Multi-Empresa</field>
+            <field name="model_id" ref="fleet.model_fleet_vehicle"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+            <field name="global" eval="True"/>
+        </record>
+
+        <!--
+            NOTA: La regla de Cotizaciones fue ELIMINADA.
+            Ahora Cotización y Viaje están fusionados en tms.waybill.
+            Ver regla tms_waybill_company_rule abajo.
+        -->
+
+        <!-- Record Rule: Viajes por Empresa (Modelo Maestro) -->
+        <record id="tms_waybill_company_rule" model="ir.rule">
+            <field name="name">Viajes: Aislamiento Multi-Empresa</field>
+            <field name="model_id" ref="model_tms_waybill"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+            <field name="global" eval="True"/>
+        </record>
+
+        <!--
+            ================================================================
+            REGLA CRÍTICA SAAS: AISLAMIENTO DE CLIENTES (res.partner)
+            ================================================================
+
+            ¿POR QUÉ ES CRÍTICA?
+            Esta regla es el CORAZÓN de la privacidad SaaS multi-empresa.
+            Garantiza que los clientes (res.partner) creados o usados en el sistema
+            sean PRIVADOS para cada empresa.
+
+            ESCENARIO SIN ESTA REGLA:
+            - Empresa A crea cliente "Transportes del Norte"
+            - Empresa B podría ver y usar ese mismo cliente
+            - Violación de privacidad en SaaS
+
+            ESCENARIO CON ESTA REGLA:
+            - Empresa A crea cliente "Transportes del Norte" (company_id=1)
+            - Empresa B NO puede ver ese cliente
+            - Cada empresa solo ve SUS propios clientes
+
+            DOMINIO EXPLICADO:
+            [('company_id', 'in', company_ids)]
+
+            Desglose:
+            - ('company_id', 'in', company_ids) = Solo contactos de las empresas del usuario
+
+            ¿QUÉ ES company_ids?
+            - Variable especial de Odoo
+            - Lista de IDs de empresas a las que el usuario tiene acceso
+            - Si usuario solo tiene acceso a Empresa A (ID=1): company_ids = [1]
+            - Si usuario tiene acceso a A y B: company_ids = [1, 2]
+
+            NOTA IMPORTANTE:
+            - NO usamos ['|', ('company_id', '=', False), ...] porque queremos
+              que TODOS los clientes tengan company_id (privados por empresa)
+            - Si un cliente se crea sin company_id, NO será visible para nadie
+            - Esto fuerza a que siempre se asigne una empresa al crear clientes
+
+            CONTEXTO DE CREACIÓN:
+            En las vistas o acciones donde se crean clientes, asegúrate de pasar:
+            {'default_company_id': allowed_company_ids[0]}
+
+            Esto garantiza que los clientes NUNCA se creen con company_id = False.
+        -->
+        <record id="res_partner_company_rule_tms" model="ir.rule">
+            <field name="name">TMS: Clientes Privados por Empresa</field>
+            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+            <field name="global" eval="True"/>
+        </record>
+
+        <!--
+            ================================================================
+            EXPLICACIÓN DEL FLUJO SAAS
+            ================================================================
+
+            ESCENARIO:
+            Base de datos única con 2 empresas:
+            - Empresa A: "Transportes del Norte" (ID=1)
+            - Empresa B: "Fletes del Sur" (ID=2)
+
+            USUARIOS:
+            - Juan: pertenece a Empresa A
+            - María: pertenece a Empresa B
+
+            DATOS EN LA BD:
+            Destinos:
+            - ID 1: "Monterrey-CDMX" (company_id=1, Empresa A)
+            - ID 2: "Guadalajara-Puebla" (company_id=1, Empresa A)
+            - ID 3: "Cancún-Mérida" (company_id=2, Empresa B)
+
+            CONSULTAS:
+
+            Juan hace: self.env['tms.destination'].search([])
+            - company_ids del usuario Juan = [1]
+            - Record Rule convierte en: search([('company_id', 'in', [1])])
+            - RESULTADO: Juan ve solo IDs 1 y 2 (su empresa)
+            - Juan NO ve ID 3 (es de María)
+
+            María hace: self.env['tms.destination'].search([])
+            - company_ids de María = [2]
+            - Record Rule: search([('company_id', 'in', [2])])
+            - RESULTADO: María ve solo ID 3
+            - María NO ve IDs 1 y 2
+
+            CONCLUSIÓN:
+            - Aislamiento total automático
+            - No hay código manual de filtrado
+            - Seguridad a nivel de base de datos
+            - Perfecto para sistemas SaaS
+        -->
+
+    </data>
+</odoo>
+

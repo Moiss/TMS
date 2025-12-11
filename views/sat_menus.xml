@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        ================================================================
+        ESTRUCTURA DE MENÚS - CATÁLOGOS SAT (Carta Porte 3.1)
+        ================================================================
+
+        Jerarquía exacta solicitada:
+
+        TMS (App - menú raíz)
+        └── Configuración
+            └── Catálogos SAT
+                ├── Importar Catálogos (Wizard)
+                ├── [Separador]
+                ├── Clave Producto/Servicio
+                ├── Clave Unidad
+                ├── Tipo de Embalaje
+                ├── Material Peligroso
+                ├── [Separador]
+                ├── Códigos Postales
+                ├── Colonias
+                ├── Localidades
+                ├── Municipios
+                ├── [Separador]
+                ├── Configuración Autotransporte
+                ├── Tipos de Permiso SCT
+                └── Figuras de Transporte
+    -->
+
+    <!--
+        NOTA IMPORTANTE:
+        El menú raíz "menu_tms_root" y "menu_tms_config" se definen en tms_menus.xml
+        Este archivo solo agrega los submenús de Catálogos SAT
+    -->
+
+    <!--
+        NOTA: menu_tms_config ya está definido en tms_menus.xml
+        Solo definimos menu_sat_catalogs como hijo de menu_tms_config
+    -->
+
+    <!--
+        Submenú: Catálogos SAT
+        Aparece dentro de Configuración
+    -->
+    <menuitem id="menu_sat_catalogs"
+              name="Catálogos SAT"
+              parent="menu_tms_config"
+              sequence="10"/>
+
+    <!--
+        ================================================================
+        ACCIÓN: Importar Catálogos (Wizard)
+        ================================================================
+    -->
+    <menuitem id="menu_sat_import_wizard"
+              name="➕ Importar Catálogos"
+              parent="menu_sat_catalogs"
+              action="action_sat_import_wizard"
+              sequence="1"/>
+
+    <!-- Separador visual -->
+    <menuitem id="menu_sat_sep_1"
+              parent="menu_sat_catalogs"
+              sequence="5"/>
+
+    <!--
+        ================================================================
+        SECCIÓN 1: CATÁLOGOS DE PRODUCTOS Y MERCANCÍAS
+        ================================================================
+    -->
+
+    <menuitem id="menu_sat_clave_prod"
+              name="Clave Producto/Servicio"
+              parent="menu_sat_catalogs"
+              action="action_sat_clave_prod"
+              sequence="10"/>
+
+    <menuitem id="menu_sat_clave_unidad"
+              name="Clave Unidad"
+              parent="menu_sat_catalogs"
+              action="action_sat_clave_unidad"
+              sequence="20"/>
+
+    <menuitem id="menu_sat_embalaje"
+              name="Tipo de Embalaje"
+              parent="menu_sat_catalogs"
+              action="action_sat_embalaje"
+              sequence="30"/>
+
+    <menuitem id="menu_sat_material_peligroso"
+              name="Material Peligroso"
+              parent="menu_sat_catalogs"
+              action="action_sat_material_peligroso"
+              sequence="40"/>
+
+    <!-- Separador visual -->
+    <menuitem id="menu_sat_sep_2"
+              parent="menu_sat_catalogs"
+              sequence="45"/>
+
+    <!--
+        ================================================================
+        SECCIÓN 2: CATÁLOGOS GEOGRÁFICOS
+        ================================================================
+    -->
+
+    <menuitem id="menu_sat_codigo_postal"
+              name="Códigos Postales"
+              parent="menu_sat_catalogs"
+              action="action_sat_codigo_postal"
+              sequence="50"/>
+
+    <menuitem id="menu_sat_colonia"
+              name="Colonias"
+              parent="menu_sat_catalogs"
+              action="action_sat_colonia"
+              sequence="60"/>
+
+    <menuitem id="menu_sat_localidad"
+              name="Localidades"
+              parent="menu_sat_catalogs"
+              action="action_sat_localidad"
+              sequence="70"/>
+
+    <menuitem id="menu_sat_municipio"
+              name="Municipios"
+              parent="menu_sat_catalogs"
+              action="action_sat_municipio"
+              sequence="80"/>
+
+    <!-- Separador visual -->
+    <menuitem id="menu_sat_sep_3"
+              parent="menu_sat_catalogs"
+              sequence="85"/>
+
+    <!--
+        ================================================================
+        SECCIÓN 3: CATÁLOGOS DE TRANSPORTE
+        ================================================================
+    -->
+
+    <menuitem id="menu_sat_config_autotransporte"
+              name="Configuración Autotransporte"
+              parent="menu_sat_catalogs"
+              action="action_sat_config_autotransporte"
+              sequence="90"/>
+
+    <menuitem id="menu_sat_tipo_permiso"
+              name="Tipos de Permiso SCT"
+              parent="menu_sat_catalogs"
+              action="action_sat_tipo_permiso"
+              sequence="100"/>
+
+    <menuitem id="menu_sat_figura_transporte"
+              name="Figuras de Transporte"
+              parent="menu_sat_catalogs"
+              action="action_sat_figura_transporte"
+              sequence="110"/>
+
+</odoo>
