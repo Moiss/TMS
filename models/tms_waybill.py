@@ -270,6 +270,7 @@ class TmsWaybill(models.Model):
         'tms.destination',
         string='Seleccionar Ruta Frecuente',
         domain="[('company_id', '=', company_id), ('active', '=', True)]",
+        tracking=True,
         help='Selecciona una ruta frecuente para auto-completar origen, destino, distancia y duración'
     )
 
@@ -556,7 +557,8 @@ class TmsWaybill(models.Model):
     selected_proposal = fields.Selection(
         [('km', 'Por Kilómetro'), ('trip', 'Por Viaje (Costos)'), ('direct', 'Directo')],
         string='Propuesta Seleccionada',
-        default='direct'
+        default='direct',
+        tracking=True
     )
 
     # ============================================================
@@ -663,7 +665,7 @@ class TmsWaybill(models.Model):
         super()._compute_access_url()
         # Asignar URL personalizada para cada waybill
         for waybill in self:
-            waybill.access_url = '/my/waybills/%s' % waybill.id
+            waybill.access_url = '/my/waybills/%s' % (waybill.id)
 
     @api.depends('partner_invoice_id', 'partner_invoice_id.street', 'partner_invoice_id.city',
                  'partner_invoice_id.zip', 'partner_invoice_id.state_id')
@@ -946,7 +948,7 @@ class TmsWaybill(models.Model):
         self.ensure_one()
 
         # Validar que esté en estado de solicitud
-        if self.state != 'request':
+        if self.state != 'draft':
             raise UserError(_('Solo se pueden firmar cotizaciones en estado "Solicitud".'))
 
         # Validar que la firma no esté vacía
@@ -961,7 +963,7 @@ class TmsWaybill(models.Model):
             'signature': signature,
             'signed_by': signed_by,
             'signed_on': now,
-            'state': 'confirmed',  # Cambiar a "Por Asignar" (cotización aceptada)
+            'state': 'en_pedido',  # Cambiar a "En Pedido" (cotización confirmada)
         })
 
         # Registrar en el chatter
@@ -1083,9 +1085,36 @@ class TmsWaybill(models.Model):
         return super(TmsWaybill, self).create(vals_list)
 
 
+    def action_send_email(self):
+        """ Abre el wizard de correo con la plantilla pre-cargada """
+        self.ensure_one()
+        # Referencia a la plantilla creada en data/mail_template_data.xml
+        template = self.env.ref('tms.email_template_tms_waybill')
+
+        ctx = {
+            'default_model': 'tms.waybill',
+            'default_res_ids': self.ids,
+            'default_use_template': bool(template),
+            'default_template_id': template.id,
+            'default_composition_mode': 'comment',
+            'force_email': True,
+        }
+
+        return {
+            'type': 'ir.actions.act_window',
+            'view_mode': 'form',
+            'res_model': 'mail.compose.message',
+            'views': [(False, 'form')],
+            'view_id': False,
+            'target': 'new',
+            'context': ctx,
+        }
+
+
 # ============================================================
 # MODELO DE LÍNEAS: Mercancías del Viaje
 # ============================================================
+
 
 class TmsWaybillLine(models.Model):
     """
@@ -1162,3 +1191,28 @@ class TmsWaybillLine(models.Model):
         default=False,
         help='Indica si la mercancía es material peligroso'
     )
+
+    def action_send_email(self):
+        """ Abre el wizard de correo con la plantilla pre-cargada """
+        self.ensure_one()
+        # Referencia a la plantilla creada en data/mail_template_data.xml
+        template = self.env.ref('tms.email_template_tms_waybill')
+
+        ctx = {
+            'default_model': 'tms.waybill',
+            'default_res_ids': self.ids,
+            'default_use_template': bool(template),
+            'default_template_id': template.id,
+            'default_composition_mode': 'comment',
+            'force_email': True,
+        }
+
+        return {
+            'type': 'ir.actions.act_window',
+            'view_mode': 'form',
+            'res_model': 'mail.compose.message',
+            'views': [(False, 'form')],
+            'view_id': False,
+            'target': 'new',
+            'context': ctx,
+        }

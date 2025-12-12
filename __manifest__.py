@@ -63,13 +63,7 @@
     'version': '18.0.1.0.0',
 
     # Dependencias para Fase 2: Flota y Dashboard
-    'depends': [
-        'base',      # Módulo base de Odoo
-        'fleet',     # Gestión de vehículos (NATIVO - lo extendemos)
-        'contacts',  # Para clientes y proveedores
-        'board',     # Para dashboards/tableros
-        'portal',    # Portal web para firma digital de cotizaciones
-    ],
+    'depends': ['base', 'fleet', 'contacts', 'board', 'mail', 'portal'],
     # NOTA: Los catálogos SAT están en este mismo módulo, no necesitamos dependencia externa
 
     # Archivos de datos (orden estricto de carga)
@@ -82,6 +76,8 @@
 
         # 2. Datos iniciales (secuencias)
         'data/tms_sequence_data.xml',
+        'data/tms_data.xml',
+
 
         # 3. Wizard de importación
         'wizard/sat_import_wizard_views.xml',
@@ -104,6 +100,7 @@
         'views/res_partner_tms_modals_view.xml',
 
         # 4. Vistas de Flota (extensión de módulo nativo)
+        'views/tms_vehicle_type_view.xml',
         'views/tms_fleet_vehicle_views.xml',
 
         # 5. Vistas de Destinos/Rutas
@@ -120,6 +117,7 @@
 
         # 9. Reportes PDF
         'reports/tms_waybill_report.xml',
+        'data/mail_template_data.xml',
 
         # 10. Menús (AL FINAL para que todas las acciones estén disponibles)
         # IMPORTANTE: tms_menus.xml ANTES de sat_menus.xml

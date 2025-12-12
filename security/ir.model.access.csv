@@ -16,3 +16,5 @@ access_tms_destination_manager,tms.destination.manager,model_tms_destination,bas
 access_tms_waybill_user,tms.waybill.user,model_tms_waybill,base.group_user,1,1,1,0
 access_tms_waybill_manager,tms.waybill.manager,model_tms_waybill,base.group_system,1,1,1,1
 access_tms_waybill_line_user,access_tms_waybill_line_user,model_tms_waybill_line,base.group_user,1,1,1,1
+access_tms_vehicle_type_user,tms.vehicle.type.user,model_tms_vehicle_type,base.group_user,1,1,1,1
+access_tms_waybill_portal,tms.waybill.portal,model_tms_waybill,base.group_portal,1,0,0,0

@@ -67,12 +67,32 @@ class FleetVehicle(models.Model):
 
     # Boolean: define si este vehículo es un remolque o un tractor
     # CLAVE DE ARQUITECTURA: Con un solo modelo manejamos ambos tipos
+    # Identificador de Tipo de Vehículo (Tractor vs Remolque vs Dolly vs Otros)
+    tms_vehicle_type_id = fields.Many2one(
+        'tms.vehicle.type',
+        string="Tipo Vehículo TMS",
+        required=True,
+        tracking=True,
+        help="Define el tipo de vehículo y su comportamiento (si es remolque, motorizado, etc.)"
+    )
+
+    # Boolean: define si este vehículo es un remolque o un tractor
+    # CLAVE DE ARQUITECTURA: Con un solo modelo manejamos ambos tipos
+    # Ahora se computa desde tms_vehicle_type_id pero permite override
     is_trailer = fields.Boolean(
         string='Es Remolque/Semirremolque',
-        default=False,
+        compute='_compute_is_trailer',
+        store=True,
+        readonly=False,
         help='Marcar si este vehículo es un remolque. '
              'Si es False, es un tractocamión o camión unitario.'
     )
+
+    @api.depends('tms_vehicle_type_id', 'tms_vehicle_type_id.is_trailer')
+    def _compute_is_trailer(self):
+        for rec in self:
+            if rec.tms_vehicle_type_id:
+                rec.is_trailer = rec.tms_vehicle_type_id.is_trailer
 
     # ============================================================
     # CAMPOS GENERALES (Tractor Y Remolque)

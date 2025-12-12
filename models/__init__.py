@@ -32,4 +32,5 @@ from . import res_partner_tms         # Extensión de res.partner para Catálogo
 
 from . import tms_fleet_vehicle       # Extensión de fleet.vehicle (tractores y remolques)
 from . import tms_destination         # Destinos/Rutas comerciales por empresa
-from . import tms_waybill             # Viajes / Cartas Porte (MODELO MAESTRO: fusiona Cotización + Viaje)
+from . import tms_waybill
+from . import tms_vehicle_type             # Viajes / Cartas Porte (MODELO MAESTRO: fusiona Cotización + Viaje)

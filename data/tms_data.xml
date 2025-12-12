@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        NOUPDATE = 1
+        Para que el usuario pueda modificar los nombres/flags sin que se sobrescriban al actualizar
+    -->
+    <data noupdate="1">
+
+        <!-- 1. Tractocamión -->
+        <record id="tms_vehicle_type_tractor" model="tms.vehicle.type">
+            <field name="name">Tractocamión</field>
+            <field name="is_motorized" eval="True"/>
+            <field name="is_trailer" eval="False"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- 2. Remolque / Caja -->
+        <record id="tms_vehicle_type_trailer" model="tms.vehicle.type">
+            <field name="name">Remolque / Caja</field>
+            <field name="is_motorized" eval="False"/>
+            <field name="is_trailer" eval="True"/>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- 3. Camioneta -->
+        <record id="tms_vehicle_type_truck" model="tms.vehicle.type">
+            <field name="name">Camioneta</field>
+            <field name="is_motorized" eval="True"/>
+            <field name="is_trailer" eval="False"/>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- 4. Dolly -->
+        <record id="tms_vehicle_type_dolly" model="tms.vehicle.type">
+            <field name="name">Dolly</field>
+            <field name="is_motorized" eval="False"/>
+            <field name="is_trailer" eval="True"/>
+            <field name="sequence">40</field>
+        </record>
+
+    </data>
+</odoo>

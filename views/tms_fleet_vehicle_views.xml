@@ -36,8 +36,14 @@
             -->
             <xpath expr="//field[@name='active']" position="after">
                 <!--
+                    Campo: Tipo de Vehículo TMS (Catálogo Dinámico)
+                    Determina si es Remolque, Motorizado, etc.
+                -->
+                <field name="tms_vehicle_type_id" options="{'no_create': True}"/>
+
+                <!--
                     Campo checkbox: Es Remolque
-                    Este campo cambia la lógica del formulario completo
+                    Calculado desde el tipo, pero editable
                 -->
                 <field name="is_trailer" widget="boolean_toggle"/>
             </xpath>

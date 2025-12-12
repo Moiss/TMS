@@ -80,6 +80,23 @@
               action="action_tms_destination"
               sequence="30"/>
 
+    <!-- ==================================================== -->
+    <!-- 4. SUBMENÚS DE CONFIGURACIÓN -->
+    <!-- ==================================================== -->
+
+    <!-- Grupo: Flota -->
+    <menuitem id="menu_tms_config_fleet"
+              name="Flota"
+              parent="menu_tms_config"
+              sequence="10"/>
+
+    <!-- Tipos de Vehículo -->
+    <menuitem id="menu_tms_vehicle_type"
+              name="Tipos de Vehículo"
+              parent="menu_tms_config_fleet"
+              action="action_tms_vehicle_type"
+              sequence="10"/>
+
     <!--
         NOTA: El menú "Configuración" y sus submenús de Catálogos SAT
         se definen en sat_menus.xml

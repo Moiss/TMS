@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- TREE VIEW -->
+    <record id="view_tms_vehicle_type_tree" model="ir.ui.view">
+        <field name="name">tms.vehicle.type.tree</field>
+        <field name="model">tms.vehicle.type</field>
+        <field name="arch" type="xml">
+            <list string="Tipos de Vehículo TMS" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="is_trailer"/>
+                <field name="is_motorized"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- FORM VIEW (Simple, though Tree is editable) -->
+    <record id="view_tms_vehicle_type_form" model="ir.ui.view">
+        <field name="name">tms.vehicle.type.form</field>
+        <field name="model">tms.vehicle.type</field>
+        <field name="arch" type="xml">
+            <form string="Tipo de Vehículo TMS">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="is_trailer"/>
+                            <field name="is_motorized"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ACTION -->
+    <record id="action_tms_vehicle_type" model="ir.actions.act_window">
+        <field name="name">Tipos de Vehículo</field>
+        <field name="res_model">tms.vehicle.type</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+          <p class="o_view_nocontent_smiling_face">
+            Defina los tipos de vehículos (e.g. Tractocamión, Remolque, Dolly).
+          </p>
+        </field>
+    </record>
+
+</odoo>

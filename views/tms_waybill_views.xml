@@ -100,6 +100,12 @@
                             type="object"
                             class="btn-primary"
                             invisible="state != 'draft'"/>
+                    <button name="action_send_email"
+                            string="Enviar Cotización"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-envelope"
+                            invisible="state != 'draft'"/>
                     <button name="action_approve_cp" string="Generar Carta Porte"
                             type="object" class="oe_highlight"
                             invisible="state != 'assigned'"/>
@@ -311,6 +317,11 @@
                         </page>
                     </notebook>
                 </sheet>
+                <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
             </form>
         </field>
     </record>
