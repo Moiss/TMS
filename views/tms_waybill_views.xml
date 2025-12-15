@@ -95,6 +95,7 @@
         <field name="arch" type="xml">
             <form string="Viaje">
                 <header>
+                    <button name="action_preview_waybill" string="Vista Previa" type="object" class="btn-secondary" icon="fa-globe"/>
                     <button name="action_set_en_pedido"
                             string="Confirmar Pedido"
                             type="object"
@@ -135,19 +136,32 @@
                     </div>
 
                     <!-- Datos generales + resumen de precio -->
+                    <!-- SECCIÓN DE BÚSQUEDA Y RUTA (OPTIMIZADO PARA ANCHO) -->
+                    <group>
+                        <group string="Búsqueda de Rutas" col="4" colspan="2">
+                            <field name="state_origin_search_id"/>
+                            <field name="state_dest_search_id"/>
+                        </group>
+                        <group string="Ruta" colspan="2">
+                            <!-- Selector de Ruta con Dominio Dinámico -->
+                            <field name="route_id"
+                                   placeholder="Selecciona una ruta..."
+                                   domain="[
+                                       ('state_origin_id', '=?', state_origin_search_id),
+                                       ('state_dest_id', '=?', state_dest_search_id)
+                                   ]"
+                                   options="{'no_create': True}"/>
+                        </group>
+                    </group>
+
+                    <!-- DATOS GENERALES Y DETALLES -->
                     <group>
                         <group>
-                        <group invisible="state in ['draft','en_pedido']">
-                            <field name="cp_type"/>
-                        </group>
+                            <group invisible="state in ['draft','en_pedido']">
+                                <field name="cp_type"/>
+                            </group>
                             <field name="date_created"/>
                             <field name="company_id" groups="base.group_multi_company"/>
-
-                            <!-- Movid: Búsqueda de Rutas -->
-                            <group string="Búsqueda de Rutas">
-                                <field name="state_origin_search_id"/>
-                                <field name="state_dest_search_id"/>
-                            </group>
                         </group>
                         <group>
                             <label for="amount_total" string="Precio Final"/>
@@ -157,15 +171,8 @@
                             <!-- Etiqueta de qué propuesta quedó seleccionada -->
                             <field name="selected_proposal" widget="label" class="text-muted"/>
 
-                            <!-- Movid: Ruta -->
-                            <group string="Ruta">
-                                <!-- Selector de Ruta con Dominio Dinámico -->
-                                <field name="route_id"
-                                       placeholder="Selecciona una ruta..."
-                                       domain="[
-                                           ('state_origin_id', '=?', state_origin_search_id),
-                                           ('state_dest_id', '=?', state_dest_search_id)
-                                       ]"/>
+                            <!-- Detalles de Ruta (Readonly infos) -->
+                            <group string="Detalles de Ruta">
                                 <field name="distance_km"/>
                                 <field name="duration_hours" widget="float_time"/>
                                 <field name="toll_cost" widget="monetary"/>

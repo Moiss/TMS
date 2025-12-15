@@ -70,7 +70,7 @@ class TmsWaybill(models.Model):
         help='Número de folio del viaje (VJ/0001, VJ/0002, etc.)'
     )
 
-    # Selection: estado del viaje (7 etapas)
+    # Selection: estado del viaje (8 etapas, agregado 'rejected' para portal)
     # group_expand: asegura que todas las columnas aparezcan en Kanban
     state = fields.Selection(
         string='Estado',
@@ -83,6 +83,7 @@ class TmsWaybill(models.Model):
             ('arrived', 'En Destino'),
             ('closed', 'Facturado / Cerrado'),
             ('cancel', 'Cancelado'),
+            ('rejected', 'Rechazado'),  # Agregado para rechazo desde portal
         ],
         default='draft',
         required=True,
@@ -132,7 +133,8 @@ class TmsWaybill(models.Model):
     partner_invoice_id = fields.Many2one(
         'res.partner',
         string='Cliente Facturación',
-        domain=[],  # Sin dominio: muestra todos los contactos
+        domain="[('company_id', '=', company_id)]",  # Solo partners de la misma empresa
+        check_company=True,
         tracking=True,
         help='Cliente al que se le facturará el servicio'
     )
@@ -160,6 +162,8 @@ class TmsWaybill(models.Model):
     partner_origin_id = fields.Many2one(
         'res.partner',
         string='Remitente (Origen)',
+        domain="[('company_id', '=', company_id)]",  # Solo partners de la misma empresa
+        check_company=True,
         help='Contacto que entrega la mercancía'
     )
 
@@ -198,6 +202,8 @@ class TmsWaybill(models.Model):
     partner_dest_id = fields.Many2one(
         'res.partner',
         string='Destinatario',
+        domain="[('company_id', '=', company_id)]",  # Solo partners de la misma empresa
+        check_company=True,
         help='Contacto que recibe la mercancía'
     )
 
@@ -270,6 +276,7 @@ class TmsWaybill(models.Model):
         'tms.destination',
         string='Seleccionar Ruta Frecuente',
         domain="[('company_id', '=', company_id), ('active', '=', True)]",
+        check_company=True,
         tracking=True,
         help='Selecciona una ruta frecuente para auto-completar origen, destino, distancia y duración'
     )
@@ -350,6 +357,7 @@ class TmsWaybill(models.Model):
         'fleet.vehicle',
         string='Vehículo (Tractor)',
         domain="[('is_trailer', '=', False), ('company_id', '=', company_id)]",
+        check_company=True,
         tracking=True,
         help='Tractocamión asignado al viaje'
     )
@@ -358,6 +366,8 @@ class TmsWaybill(models.Model):
     driver_id = fields.Many2one(
         'res.partner',
         string='Chofer',
+        domain="[('company_id', '=', company_id)]",  # Solo partners de la misma empresa
+        check_company=True,
         tracking=True,
         help='Conductor asignado al viaje'
     )
@@ -367,6 +377,7 @@ class TmsWaybill(models.Model):
         'fleet.vehicle',
         string='Remolque 1',
         domain="[('is_trailer', '=', True), ('company_id', '=', company_id)]",
+        check_company=True,
         help='Primer remolque asignado'
     )
 
@@ -375,6 +386,7 @@ class TmsWaybill(models.Model):
         'fleet.vehicle',
         string='Remolque 2',
         domain="[('is_trailer', '=', True), ('company_id', '=', company_id)]",
+        check_company=True,
         help='Segundo remolque asignado (opcional)'
     )
 
@@ -490,8 +502,10 @@ class TmsWaybill(models.Model):
 
     # Binary: imagen de la firma del cliente (base64)
     # Se guarda cuando el cliente firma la cotización en el portal
-    signature = fields.Binary(
+    signature = fields.Image(
         string='Firma Digital',
+        copy=False,
+        attachment=True,
         help='Firma digital del cliente capturada en el portal web'
     )
 
@@ -506,8 +520,30 @@ class TmsWaybill(models.Model):
     # Se establece automáticamente cuando se ejecuta _action_sign()
     signed_on = fields.Datetime(
         string='Fecha de Firma',
+        copy=False,
         help='Fecha y hora en que el cliente firmó la cotización'
     )
+
+    # Text: motivo de rechazo desde el portal
+    # Se captura cuando el cliente rechaza la cotización desde el portal
+    rejection_reason = fields.Text(
+        string='Motivo de Rechazo',
+        copy=False,
+        help='Motivo del rechazo capturado desde el portal web'
+    )
+
+    def _get_report_base_filename(self):
+        self.ensure_one()
+        return 'Cotizacion-%s' % (self.name)
+
+    def action_preview_waybill(self):
+        """Abre la cotización en el portal en una NUEVA pestaña"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_url',
+            'target': 'new',  # <--- 'new' fuerza la nueva pestaña
+            'url': self.get_portal_url(),
+        }
 
     # ============================================================
     # MOTOR DE COTIZACIÓN (Costos y Propuestas)
@@ -808,6 +844,7 @@ class TmsWaybill(models.Model):
             'assigned',
             'waybill',
             'in_transit',
+            'rejected',  # Agregado para rechazo desde portal
             'arrived',
             'closed',
             'cancel',

@@ -29,6 +29,13 @@
             <field name="implied_ids" eval="[(4, ref('group_tms_user'))]"/>
         </record>
 
+        <!-- Grupo: Chofer TMS -->
+        <record id="group_tms_driver" model="res.groups">
+            <field name="name">Chofer TMS</field>
+            <field name="category_id" ref="module_category_tms"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
         <!--
             ================================================================
             RECORD RULES - AISLAMIENTO MULTI-EMPRESA (CRÍTICO PARA SAAS)
@@ -80,7 +87,8 @@
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="True"/>
-            <field name="global" eval="True"/>
+            <field name="global" eval="False"/>
+            <field name="groups" eval="[(4, ref('group_tms_user')), (4, ref('group_tms_manager')), (4, ref('group_tms_driver'))]"/>
         </record>
 
         <!--
@@ -102,7 +110,8 @@
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="True"/>
-            <field name="global" eval="True"/>
+            <field name="global" eval="False"/>
+            <field name="groups" eval="[(4, ref('group_tms_user')), (4, ref('group_tms_manager')), (4, ref('group_tms_driver'))]"/>
         </record>
 
         <!--
@@ -120,7 +129,8 @@
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="True"/>
-            <field name="global" eval="True"/>
+            <field name="global" eval="False"/>
+            <field name="groups" eval="[(4, ref('group_tms_user')), (4, ref('group_tms_manager')), (4, ref('group_tms_driver'))]"/>
         </record>
 
         <!--
@@ -175,7 +185,8 @@
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="True"/>
-            <field name="global" eval="True"/>
+            <field name="global" eval="False"/>
+            <field name="groups" eval="[(4, ref('group_tms_user')), (4, ref('group_tms_manager'))]"/>
         </record>
 
         <!--

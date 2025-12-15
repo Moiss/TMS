@@ -63,7 +63,8 @@
     'version': '18.0.1.0.0',
 
     # Dependencias para Fase 2: Flota y Dashboard
-    'depends': ['base', 'fleet', 'contacts', 'board', 'mail', 'portal'],
+    # sale_management: Para reutilizar estética de portal de Sales (sin convertir waybill en sale.order)
+    'depends': ['base', 'fleet', 'account', 'contacts', 'board', 'mail', 'portal', 'web', 'sale_management'],
     # NOTA: Los catálogos SAT están en este mismo módulo, no necesitamos dependencia externa
 
     # Archivos de datos (orden estricto de carga)
@@ -81,6 +82,7 @@
 
         # 3. Wizard de importación
         'wizard/sat_import_wizard_views.xml',
+        'wizard/partner_assign_company_wizard_views.xml',
 
         # 3. Vistas de Catálogos SAT (orden alfabético)
         'views/sat_clave_prod_views.xml',
@@ -125,6 +127,17 @@
         'views/tms_menus.xml',               # Define action_tms_dashboard y menús operativos
         'views/sat_menus.xml',               # Usa menu_tms_root y action_tms_dashboard
     ],
+
+    'assets': {
+        'web.assets_backend': [
+            'tms/static/src/js/tms_portal_link_handler.js',
+        ],
+        # Assets para portal: JS y CSS para vista moderna estilo Sales
+        'web.assets_frontend': [
+            'tms/static/src/js/portal_waybill_sign.js',
+            'tms/static/src/css/portal_waybill.css',
+        ],
+    },
 
     # Datos demo (vacío por ahora)
     'demo': [],

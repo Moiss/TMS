@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista Formulario para Wizard de Asignación de Empresa a Partners -->
+    <record id="view_partner_assign_company_wizard_form" model="ir.ui.view">
+        <field name="name">partner.assign.company.wizard.form</field>
+        <field name="model">partner.assign.company.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Asignar Empresa a Partners">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="company_id" required="1"/>
+                        </group>
+                    </group>
+                    <group string="Partners sin Empresa">
+                        <field name="partner_ids"
+                               widget="many2many_checkboxes"
+                               domain="[('company_id', '=', False)]"
+                               options="{'no_create': True}"
+                               nolabel="1"/>
+                        <div class="alert alert-info" role="alert">
+                            <p><strong>Nota:</strong> Solo se muestran partners que no tienen empresa asignada.</p>
+                            <p>Seleccione los partners que desea asignar a la empresa seleccionada.</p>
+                        </div>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Asignar Empresa"
+                            name="action_assign_company"
+                            type="object"
+                            class="btn-primary"/>
+                    <button string="Cancelar"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Acción para Abrir el Wizard -->
+    <record id="action_partner_assign_company_wizard" model="ir.actions.act_window">
+        <field name="name">Asignar Empresa a Partners</field>
+        <field name="res_model">partner.assign.company.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
+        <field name="binding_view_types">list</field>
+    </record>
+</odoo>
+

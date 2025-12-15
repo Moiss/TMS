@@ -1,0 +1,224 @@
+/**
+ * Estilos CSS para Portal de Waybills - Vista Moderna Estilo Sales
+ *
+ * DISEÑO:
+ * - Sidebar sticky con sombra y espaciado
+ * - Cards limpias con bordes sutiles
+ * - Tablas responsivas estilo Sales
+ * - Botones de acción destacados
+ * - Espaciado consistente Bootstrap 5
+ */
+
+/* ================================================================
+   SIDEBAR STICKY
+   ================================================================ */
+
+/* Contenedor del sidebar sticky */
+.sticky-top {
+    z-index: 1020; /* Z-index estándar de Bootstrap 5 para sticky elements */
+}
+
+/* Card del sidebar: sombra y espaciado */
+.sticky-top .card {
+    border: 1px solid #dee2e6; /* Borde sutil */
+    border-radius: 0.375rem; /* Border-radius estándar Bootstrap 5 */
+}
+
+/* ================================================================
+   TOTAL EN SIDEBAR
+   ================================================================ */
+
+/* Total grande con separación visual */
+.sticky-top .card-body h3 {
+    color: #212529; /* Color de texto oscuro */
+    font-weight: 600; /* Peso medio de fuente */
+}
+
+.sticky-top .card-body .text-muted {
+    font-size: 0.875rem; /* Tamaño de fuente pequeño */
+}
+
+/* ================================================================
+   BOTONES DE ACCIÓN (CTAs)
+   ================================================================ */
+
+/* Botones en sidebar: ancho completo y espaciado */
+.sticky-top .btn {
+    font-weight: 500; /* Peso medio para mejor legibilidad */
+    padding: 0.75rem 1rem; /* Padding generoso para mejor click */
+    transition: all 0.2s ease-in-out; /* Transición suave */
+}
+
+/* Hover en botones */
+.sticky-top .btn:hover {
+    transform: translateY(-1px); /* Efecto de elevación sutil */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra al hover */
+}
+
+/* ================================================================
+   CARDS DE ORIGEN/DESTINO
+   ================================================================ */
+
+/* Cards con altura uniforme (h-100 de Bootstrap) */
+.card.h-100 {
+    border: 1px solid #dee2e6;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+/* Hover sutil en cards */
+.card.h-100:hover {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Headers de cards con mejor contraste */
+.card-header.bg-primary,
+.card-header.bg-success {
+    font-weight: 500;
+}
+
+/* ================================================================
+   TABLA DE LÍNEAS (ESTILO SALES)
+   ================================================================ */
+
+/* Tabla responsive con mejor espaciado */
+.table-responsive {
+    border-radius: 0.375rem; /* Border-radius para suavizar esquinas */
+}
+
+/* Tabla con hover en filas */
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa; /* Fondo gris claro al hover */
+    transition: background-color 0.15s ease-in-out;
+}
+
+/* Encabezado de tabla con fondo claro */
+.table-light {
+    background-color: #f8f9fa;
+    font-weight: 500;
+}
+
+/* Alineación de números a la derecha */
+.text-end {
+    text-align: right !important;
+}
+
+/* ================================================================
+   CANVAS DE FIRMA
+   ================================================================ */
+
+/* Canvas de firma (#signatureCanvas): fondo blanco y borde visible */
+/* CRÍTICO: Estas propiedades son OBLIGATORIAS para que el navegador no "se coma" el gesto */
+#signatureCanvas {
+    background: #fff;                        /* Fondo blanco */
+    border: 1px solid #dee2e6;              /* Borde sutil */
+    border-radius: 0.25rem;                 /* Bordes redondeados */
+    display: block;                         /* Eliminar espacio inline */
+    width: 100%;                            /* Ancho completo del contenedor */
+    height: 220px;                          /* Alto fijo (coincide con JS) */
+    /* CRÍTICO: Prevenir scroll/zoom en móvil y selección de texto */
+    touch-action: none;                     /* Evita scroll y zoom cuando se toca el canvas */
+    user-select: none;                      /* Evita selección de texto accidental */
+    -webkit-user-select: none;              /* Safari/Chrome */
+    -moz-user-select: none;                 /* Firefox */
+    -ms-user-select: none;                  /* IE/Edge */
+    /* Cursor personalizado para indicar que se puede dibujar */
+    cursor: crosshair;
+}
+
+/* Contenedor del canvas con fondo blanco y posición relativa */
+#signatureCanvas + .border,
+canvas#signatureCanvas {
+    background-color: #ffffff;
+}
+
+/* Asegurar que el contenedor del canvas no interfiera */
+#signModal .modal-body .border {
+    position: relative;
+    overflow: hidden; /* Evitar scroll dentro del contenedor */
+    z-index: 1; /* Asegurar que esté por encima de otros elementos */
+}
+
+/* Botón "Generar Firma" (#generateSignatureBtn): visible solo cuando se selecciona modo generado */
+#generateSignatureBtn {
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* ================================================================
+   MODALES
+   ================================================================ */
+
+/* Modal con mejor espaciado */
+.modal-dialog {
+    max-width: 600px; /* Ancho máximo del modal */
+}
+
+.modal-body {
+    padding: 1.5rem; /* Padding generoso */
+}
+
+/* Textarea de rechazo con mejor estilo */
+#rejection_reason {
+    resize: vertical; /* Permitir redimensionar solo verticalmente */
+    min-height: 100px; /* Altura mínima */
+}
+
+/* ================================================================
+   BADGES Y ALERTAS
+   ================================================================ */
+
+/* Badges con mejor espaciado */
+.badge {
+    font-size: 0.875rem; /* Tamaño de fuente pequeño */
+    padding: 0.375rem 0.75rem; /* Padding generoso */
+    font-weight: 500; /* Peso medio */
+}
+
+/* Alertas con mejor espaciado y bordes redondeados */
+.alert {
+    border-radius: 0.375rem;
+    border: 1px solid transparent;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+/* En pantallas pequeñas, el sidebar no es sticky */
+@media (max-width: 991.98px) {
+    .sticky-top {
+        position: static !important; /* Desactivar sticky en mobile */
+    }
+}
+
+/* En pantallas grandes, mejor espaciado */
+@media (min-width: 992px) {
+    .col-lg-8 {
+        padding-right: 1.5rem; /* Espaciado derecho */
+    }
+
+    .col-lg-4 {
+        padding-left: 1.5rem; /* Espaciado izquierdo */
+    }
+}
+
+/* ================================================================
+   ACCESIBILIDAD
+   ================================================================ */
+
+/* Mejor contraste en botones */
+.btn-primary {
+    background-color: #0d6efd; /* Azul Bootstrap 5 */
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7; /* Azul más oscuro al hover */
+    border-color: #0a58ca;
+}
+
+/* Focus visible en inputs */
+.form-control:focus {
+    border-color: #86b7fe; /* Color de borde al focus */
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Sombra al focus */
+}
+
