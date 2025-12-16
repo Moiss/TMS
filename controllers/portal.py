@@ -109,11 +109,12 @@ class TMSCustomerPortal(CustomerPortal):
         return request.render("tms.portal_my_waybill", values)
 
     @http.route(['/my/waybills/<int:waybill_id>/sign'], type='http', auth="public", methods=['POST'], website=True)
-    def portal_waybill_sign(self, waybill_id, access_token=None, name=None, signature=None):
+    def portal_waybill_sign(self, waybill_id, access_token=None, name=None, signature=None, latitude=None, longitude=None):
         """
         Endpoint para firmar y aceptar un waybill desde el portal.
 
         Valida acceso + empresa, estado permitido, y guarda firma + nombre + fecha.
+        También captura IP y coordenadas si están disponibles.
         Cambia estado a 'en_pedido' (aceptado).
         Registra mensaje en chatter si mail.thread existe.
 
@@ -122,6 +123,8 @@ class TMSCustomerPortal(CustomerPortal):
             access_token: Token de acceso del portal
             name: Nombre de quien firma
             signature: Imagen de la firma en base64
+            latitude: Latitud capturada (opcional)
+            longitude: Longitud capturada (opcional)
         """
         try:
             # Validar acceso y empresa (multiempresa SaaS)
@@ -141,11 +144,17 @@ class TMSCustomerPortal(CustomerPortal):
             return request.redirect(waybill_sudo.get_portal_url(query_string='&error=missing_signature'))
 
         try:
-            # Guardar firma, nombre y fecha
+            # Obtener IP
+            client_ip = request.httprequest.remote_addr or ''
+
+            # Guardar firma, nombre, fecha y datos de localización
             waybill_sudo.write({
                 'signature': signature,
                 'signed_by': name,
                 'signed_on': fields.Datetime.now(),
+                'signed_ip': client_ip,
+                'signed_latitude': float(latitude) if latitude else 0.0,
+                'signed_longitude': float(longitude) if longitude else 0.0,
                 'state': 'en_pedido',  # Cambiar estado a "En Pedido" (aceptado)
             })
 

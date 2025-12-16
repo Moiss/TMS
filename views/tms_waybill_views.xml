@@ -127,90 +127,126 @@
                 </header>
 
                 <sheet>
-                    <!-- Título -->
-                    <div class="oe_title">
-                        <label for="name" string="Folio"/>
-                        <h1>
-                            <field name="name" readonly="1"/>
-                        </h1>
+                    <field name="company_id" invisible="1"/>
+                    <div class="d-flex justify-content-between">
+                        <div class="oe_title">
+                            <label for="name" string="Folio"/>
+                            <h1>
+                                <field name="name" readonly="1"/>
+                            </h1>
+                        </div>
+                        <div class="oe_title text-end">
+                            <label for="company_name" string="Empresa"/>
+                            <h1>
+                                <field name="company_name" readonly="1" class="text-danger"/>
+                            </h1>
+                        </div>
                     </div>
 
                     <!-- Datos generales + resumen de precio -->
                     <!-- SECCIÓN DE BÚSQUEDA Y RUTA (OPTIMIZADO PARA ANCHO) -->
-                    <group>
-                        <group string="Búsqueda de Rutas" col="4" colspan="2">
-                            <field name="state_origin_search_id"/>
-                            <field name="state_dest_search_id"/>
-                        </group>
-                        <group string="Ruta" colspan="2">
-                            <!-- Selector de Ruta con Dominio Dinámico -->
-                            <field name="route_id"
-                                   placeholder="Selecciona una ruta..."
-                                   domain="[
-                                       ('state_origin_id', '=?', state_origin_search_id),
-                                       ('state_dest_id', '=?', state_dest_search_id)
-                                   ]"
-                                   options="{'no_create': True}"/>
-                        </group>
-                    </group>
-
                     <!-- DATOS GENERALES Y DETALLES -->
-                    <group>
-                        <group>
-                            <group invisible="state in ['draft','en_pedido']">
-                                <field name="cp_type"/>
-                            </group>
-                            <field name="date_created"/>
-                            <field name="company_id" groups="base.group_multi_company"/>
-                        </group>
-                        <group>
-                            <label for="amount_total" string="Precio Final"/>
-                            <h2>
-                                <field name="amount_total" widget="monetary"/>
-                            </h2>
-                            <!-- Etiqueta de qué propuesta quedó seleccionada -->
-                            <field name="selected_proposal" widget="label" class="text-muted"/>
+                    <!-- ACTORES DEL VIAJE (HEADER) -->
+                    <div class="row mb-3">
+                        <div class="col-lg-8">
+                             <!-- FACTURACIÓN CARD -->
+                             <div class="card shadow-sm p-3 bg-white" style="border: 1px solid #e0e0e0;">
+                                <group string="Facturación" class="mb-0">
+                                    <field name="date_created" string="Fecha del Pedido"/>
+                                    <field name="partner_invoice_id"/>
+                                    <field name="invoice_rfc" readonly="1"/>
+                                    <field name="invoice_address" readonly="1"/>
+                                    <field name="company_id" groups="base.group_multi_company"/>
+                                </group>
+                             </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <!-- PRECIO CARD -->
+                            <div class="card shadow-sm p-3 bg-white h-100" style="border: 1px solid #e0e0e0;">
+                                <group class="mb-0">
+                                    <label for="amount_total" string="Precio Final"/>
+                                    <h2>
+                                        <field name="amount_total" widget="monetary"/>
+                                    </h2>
+                                    <field name="selected_proposal" string="Propuesta" widget="label" class="text-muted"/>
+                                    <field name="currency_id" invisible="1"/>
+                                </group>
+                            </div>
+                        </div>
+                    </div>
 
-                            <!-- Detalles de Ruta (Readonly infos) -->
-                            <group string="Detalles de Ruta">
-                                <field name="distance_km"/>
-                                <field name="duration_hours" widget="float_time"/>
-                                <field name="toll_cost" widget="monetary"/>
-                            </group>
-
-                            <field name="currency_id" invisible="1"/>
-                        </group>
-                    </group>
+                    <div class="row mb-3">
+                        <div class="col-lg-6">
+                            <!-- ORIGEN CARD -->
+                            <div class="card shadow-sm p-3 bg-white h-100" style="border: 1px solid #e0e0e0;">
+                                <group string="Origen" class="mb-0">
+                                    <field name="partner_origin_id"/>
+                                    <field name="origin_address"/>
+                                    <field name="origin_zip"/>
+                                    <field name="origin_rfc"/>
+                                </group>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <!-- DESTINO CARD -->
+                             <div class="card shadow-sm p-3 bg-white h-100" style="border: 1px solid #e0e0e0;">
+                                <group string="Destino" class="mb-0">
+                                    <field name="partner_dest_id"/>
+                                    <field name="dest_address"/>
+                                    <field name="dest_zip"/>
+                                    <field name="dest_rfc"/>
+                                </group>
+                             </div>
+                        </div>
+                    </div>
 
                     <notebook>
                         <!-- ======================= -->
                         <!-- INFO GENERAL -->
                         <!-- ======================= -->
-                        <page string="Información General">
+                        <!-- ======================= -->
+                        <!-- INFORMACIÓN DE RUTA    -->
+                        <!-- ======================= -->
+                        <page string="Información de Ruta">
                             <group>
-                                <group string="Facturación">
-                                    <field name="partner_invoice_id"/>
-                                    <field name="invoice_rfc" readonly="1"/>
-                                    <field name="invoice_address" readonly="1"/>
+                                <group invisible="state in ['draft','en_pedido']">
+                                    <field name="cp_type"/>
                                 </group>
                             </group>
-                            <group col="2">
-                                <group string="Origen">
-                                    <field name="partner_origin_id"/>
-                                    <field name="origin_state_id"/>
-                                    <field name="origin_address"/>
-                                    <field name="origin_zip"/>
-                                    <field name="origin_rfc"/>
+
+                            <!-- UNIDAD ASIGNADA -->
+                            <group string="Unidad Asignada">
+                                <group>
+                                    <field name="vehicle_id"/>
+                                    <field name="trailer1_id"/>
                                 </group>
-                                <group string="Destino">
-                                    <field name="partner_dest_id"/>
-                                    <field name="dest_state_id"/>
-                                    <field name="dest_address"/>
-                                    <field name="dest_zip"/>
-                                    <field name="dest_rfc"/>
+                                <group>
+                                    <field name="driver_id"/>
+                                    <field name="trailer2_id"/>
                                 </group>
                             </group>
-                            <!-- Nota: origin_city_id y dest_city_id se auto-llenan al seleccionar route_id -->
+
+                            <!-- DETALLES DE RUTA -->
+                            <group string="Detalles de Ruta">
+                                <group>
+                                    <field name="distance_km"/>
+                                    <field name="duration_hours" widget="float_time"/>
+                                    <field name="cost_tolls" widget="monetary"/>
+                                </group>
+                                <group>
+                                    <label for="action_compute_route_smart" string="Cálculo"/>
+                                    <div class="o_row">
+                                        <button name="action_compute_route_smart"
+                                                type="object"
+                                                string=" Calcular Ruta (Smart)"
+                                                icon="fa-magic"
+                                                class="btn btn-primary"/>
+                                        <div class="text-muted ms-2">
+                                            <i class="fa fa-info-circle"/> Calcula distancia y casetas basado en Origen/Destino y Vehículo.
+                                        </div>
+                                    </div>
+                                </group>
+                            </group>
                         </page>
 
                         <!-- ======================= -->
@@ -284,18 +320,6 @@
                         </page>
 
                         <!-- ======================= -->
-                        <!-- OPERACIÓN              -->
-                        <!-- ======================= -->
-                        <page string="Operación">
-                            <group col="3">
-                                <field name="vehicle_id"/>
-                                <field name="driver_id"/>
-                                <field name="trailer1_id"/>
-                                <field name="trailer2_id"/>
-                            </group>
-                        </page>
-
-                        <!-- ======================= -->
                         <!-- BITÁCORA GPS           -->
                         <!-- ======================= -->
                         <page string="Bitácora GPS">
@@ -320,6 +344,35 @@
                                 <field name="last_report_date"/>
                                 <field name="last_app_lat"/>
                                 <field name="last_app_long"/>
+                            </group>
+                        </page>
+
+                        <!-- ======================= -->
+                        <!-- FIRMA DIGITAL          -->
+                        <!-- ======================= -->
+                        <page string="Firma Digital" invisible="not signature">
+                            <group>
+                                <group string="Detalles de la Firma">
+                                    <field name="signed_by" readonly="1"/>
+                                    <field name="signed_on" readonly="1"/>
+                                    <field name="signed_ip" readonly="1"/>
+                                    <label for="signed_latitude" string="Ubicación Firma"/>
+                                    <div class="o_row">
+                                        <field name="signed_latitude" readonly="1" class="oe_inline"/> /
+                                        <field name="signed_longitude" readonly="1" class="oe_inline"/>
+                                        <a type="action"
+                                           class="btn btn-sm btn-link"
+                                           role="button"
+                                           target="_blank"
+                                           href="https://www.google.com/maps/search/?api=1&amp;query={{signed_latitude}},{{signed_longitude}}"
+                                           invisible="not signed_latitude">
+                                            <i class="fa fa-map-marker"/> Ver en Mapa
+                                        </a>
+                                    </div>
+                                </group>
+                                <group string="Imagen de Firma">
+                                    <field name="signature" widget="signature" readonly="1" style="max-height: 200px;"/>
+                                </group>
                             </group>
                         </page>
                     </notebook>

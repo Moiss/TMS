@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
-
+import logging
+import requests
+import json
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import UserError, AccessError, MissingError
+
+_logger = logging.getLogger(__name__)
 
 
 class TmsWaybill(models.Model):
@@ -45,6 +49,8 @@ class TmsWaybill(models.Model):
         index=True,
         help='Compañía propietaria del viaje (CRÍTICO para multi-empresa)'
     )
+
+    company_name = fields.Char(related='company_id.name', string="Nombre Empresa", store=True, readonly=True)
 
     # Many2one: moneda (relacionada a la compañía)
     currency_id = fields.Many2one(
@@ -285,68 +291,32 @@ class TmsWaybill(models.Model):
     # SELECTOR INTELIGENTE DE RUTAS
     # ============================================================
 
-    # ============================================================
-    # SELECTOR INTELIGENTE DE RUTAS -> ESTADOS
-    # ============================================================
-
-    state_origin_search_id = fields.Many2one(
-        'res.country.state',
-        string='Estado Origen (Buscador)',
-        domain="[('country_id.code', '=', 'MX')]",
-        help='Selecciona el estado de origen para buscar rutas'
-    )
-
-    state_dest_search_id = fields.Many2one(
-        'res.country.state',
-        string='Estado Destino (Buscador)',
-        domain="[('country_id.code', '=', 'MX')]",
-        help='Selecciona el estado de destino para buscar rutas'
-    )
-
-    # Requerimiento: Si origin_state_id o dest_state_id no existen → crearlos:
-    origin_state_id = fields.Many2one('res.country.state', string="Estado Origen")
-    dest_state_id = fields.Many2one('res.country.state', string="Estado Destino")
-
-    # Monetary: costo de casetas (Nuevo campo solicitado)
-    toll_cost = fields.Monetary(
-        string='Costo Casetas',
-        currency_field='currency_id',
-        help='Costo de casetas copiado desde la ruta seleccionada'
-    )
 
     @api.onchange('route_id')
     def _onchange_route_id(self):
         """
-        Auto-llena los datos del viaje cuando se selecciona una ruta manualmente.
+        Legacy: Si se usa el selector de ruta (aunque está oculto), intentar llenar datos básicos.
         """
         if self.route_id:
             self.route_name = self.route_id.name
             self.distance_km = self.route_id.distance_km
             self.duration_hours = self.route_id.duration_hours
-            self.toll_cost = self.route_id.toll_cost
-            # Requerimiento: Sincronizar datos al seleccionar una ruta
-            self.origin_state_id = self.route_id.origin_state_id.id
-            self.dest_state_id = self.route_id.dest_state_id.id
+            self.cost_tolls = self.route_id.cost_tolls
         else:
             self.distance_km = 0.0
             self.duration_hours = 0.0
-            self.toll_cost = 0.0
+            self.cost_tolls = 0.0
 
-    @api.depends('origin_state_id', 'dest_state_id')
+    @api.depends('partner_origin_id', 'partner_dest_id')
     def _compute_route_name(self):
         """
-        Calcula el nombre de la ruta para mostrar en tarjetas Kanban.
-        Formato: "Origen → Destino"
+        Calcula el nombre de la ruta.
+        Formato: "Ciudad/Nombre Origen → Ciudad/Nombre Destino"
         """
         for record in self:
-            if record.origin_state_id and record.dest_state_id:
-                record.route_name = f"{record.origin_state_id.name} → {record.dest_state_id.name}"
-            elif record.origin_state_id:
-                record.route_name = f"{record.origin_state_id.name} → ?"
-            elif record.dest_state_id:
-                record.route_name = f"? → {record.dest_state_id.name}"
-            else:
-                record.route_name = "Sin ruta definida"
+            origin = record.partner_origin_id.city or record.partner_origin_id.name or "?"
+            dest = record.partner_dest_id.city or record.partner_dest_id.name or "?"
+            record.route_name = f"{origin} → {dest}"
 
     # ============================================================
     # CONFIGURACIÓN OPERATIVA: VEHÍCULOS Y CHOFER
@@ -496,6 +466,147 @@ class TmsWaybill(models.Model):
         help='Monto total a cobrar por el servicio'
     )
 
+    # ==========================================
+    # API EXTERNA: CÁLCULO DE RUTA (GOOGLE ROUTES API + CACHÉ)
+    # ==========================================
+    def action_compute_route_smart(self):
+        """
+        Método inteligente:
+        1. Busca en caché (tms.destination) por CP Origen + CP Destino + Tipo Vehículo.
+        2. Si encuentra y es reciente (< 6 meses), usa eso.
+        3. Si no, llama a Google Maps Routes API (con Peajes).
+        4. Guarda/Actualiza el resultado en tms.destination.
+        """
+        self.ensure_one()
+
+        # Validar datos mínimos
+        if not self.partner_origin_id.zip or not self.partner_dest_id.zip:
+            raise UserError(_("Los contactos de Origen y Destino deben tener Código Postal para calcular la ruta."))
+
+        origin_zip = self.partner_origin_id.zip
+        dest_zip = self.partner_dest_id.zip
+        vehicle_type = self.vehicle_id.vehicle_type_id # Asumiendo que fleet.vehicle tiene vehicle_type_id relacionado a tms.vehicle.type
+
+        # 1. BUSCAR EN CACHÉ
+        cached_route = self.env['tms.destination'].search([
+            ('company_id', '=', self.company_id.id),
+            ('origin_zip', '=', origin_zip),
+            ('dest_zip', '=', dest_zip),
+            ('vehicle_type_id', '=', vehicle_type.id if vehicle_type else False)
+        ], limit=1)
+
+        # Si existe y es válida (ej. < 6 meses), usarla
+        # TODO: Agregar chequeo de fecha si se desea forzar expiración aquí,
+        # pero el usuario pidió un cron separado para re-calcular las viejas.
+        # Por ahora, si existe, la usamos.
+        if cached_route:
+             self.write({
+                'distance_km': cached_route.distance_km,
+                'duration_hours': cached_route.duration_hours,
+                'cost_tolls': cached_route.toll_cost, # Costo de casetas guardado
+                'extra_distance_km': 0.0,
+            })
+             return self._notify_success("Datos obtenidos de Caché interno.", cached_route.distance_km, cached_route.duration_hours, cached_route.toll_cost)
+
+        # 2. SI NO EXISTE -> API
+        return self._fetch_google_routes_api(origin_zip, dest_zip, vehicle_type)
+
+    def _fetch_google_routes_api(self, origin_zip, dest_zip, vehicle_type):
+        """Consumo directo de Routes API (v1:computeRoutes) para Distancia, Tiempo y PEAJES"""
+        ICPSudo = self.env['ir.config_parameter'].sudo()
+        api_key = ICPSudo.get_param('tms.google_maps_api_key')
+
+        if not api_key:
+            raise UserError(_("Falta API Key de Google Maps en Ajustes."))
+
+        # Endpoint Routes API (POST)
+        url = "https://routes.googleapis.com/directions/v2:computeRoutes"
+
+        headers = {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': api_key,
+            'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters,routes.travelAdvisory.tollInfo'
+        }
+
+        # Body del request
+        # Usamos CP, País para origen/destino
+        payload = {
+            "origin": {"address": f"postal code {origin_zip}, Mexico"},
+            "destination": {"address": f"postal code {dest_zip}, Mexico"},
+            "travelMode": "DRIVE",
+            "routingPreference": "TRAFFIC_AWARE",
+            "extraComputations": ["TOLLS"],
+            # TODO: Agregar routeModifiers para vehicle info si Google lo soporta en Mexico (emissionType, etc)
+            # Por ahora básico.
+        }
+
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=15)
+            data = response.json()
+        except Exception as e:
+            raise UserError(_("Error de conexión: %s") % str(e))
+
+        if 'error' in data:
+            raise UserError(_("Google API Error: %s") % data['error'].get('message'))
+
+        if not data.get('routes'):
+            raise UserError(_("Google no encontró ruta entre %s y %s") % (origin_zip, dest_zip))
+
+        route = data['routes'][0]
+
+        # Extraer datos
+        distance_meters = route.get('distanceMeters', 0)
+        distance_km = distance_meters / 1000.0
+
+        duration_seconds = int(route.get('duration', '0s').replace('s', ''))
+        duration_hours = duration_seconds / 3600.0
+
+        # Peajes (Tolls)
+        toll_cost = 0.0
+        if route.get('travelAdvisory') and route.get('travelAdvisory').get('tollInfo'):
+            toll_info = route['travelAdvisory']['tollInfo']
+            # Google puede devolver múltiples monedas, asumimos MXN o convertimos si es necesario?
+            # Normalmente devuelve la moneda local del trayecto.
+            # Estimación de precio es 'estimatedPrice'.
+            for price in toll_info.get('estimatedPrice', []):
+                # Sumar si es MXN, o convertir. Simplificamos asumiendo MXN para Mexico.
+                if price.get('currencyCode') == 'MXN':
+                     toll_cost += float(price.get('units', 0)) + (price.get('nanos', 0) / 1e9)
+
+        # 3. GUARDAR EN CACHÉ (tms.destination)
+        self.env['tms.destination'].create({
+            'company_id': self.company_id.id,
+            'origin_zip': origin_zip,
+            'dest_zip': dest_zip,
+            'vehicle_type_id': vehicle_type.id if vehicle_type else False,
+            'distance_km': distance_km,
+            'duration_hours': duration_hours,
+            'toll_cost': toll_cost,
+            'last_update': fields.Date.today()
+        })
+
+        # 4. ACTUALIZAR WAYBILL
+        self.write({
+            'distance_km': distance_km,
+            'duration_hours': duration_hours,
+            'cost_tolls': toll_cost,
+            'extra_distance_km': 0.0,
+        })
+
+        return self._notify_success("Calculado vía Google API (y guardado)", distance_km, duration_hours, toll_cost)
+
+    def _notify_success(self, source, dist, dur, tolls):
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Ruta Actualizada (%s)') % source,
+                'message': _('Dist: %.2f km, Tiempo: %.2f hrs, Casetas: $%.2f') % (dist, dur, tolls),
+                'sticky': False,
+                'type': 'success',
+            }
+        }
+
     # ============================================================
     # FIRMA DIGITAL (PORTAL WEB)
     # ============================================================
@@ -523,6 +634,11 @@ class TmsWaybill(models.Model):
         copy=False,
         help='Fecha y hora en que el cliente firmó la cotización'
     )
+
+    # IP y Geolocalización de la firma (Portal)
+    signed_ip = fields.Char(string='IP de Firma', copy=False, help='Dirección IP desde donde se firmó')
+    signed_latitude = fields.Float(string='Latitud Firma', digits=(10, 7), copy=False)
+    signed_longitude = fields.Float(string='Longitud Firma', digits=(10, 7), copy=False)
 
     # Text: motivo de rechazo desde el portal
     # Se captura cuando el cliente rechaza la cotización desde el portal

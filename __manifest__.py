@@ -64,7 +64,7 @@
 
     # Dependencias para Fase 2: Flota y Dashboard
     # sale_management: Para reutilizar estética de portal de Sales (sin convertir waybill en sale.order)
-    'depends': ['base', 'fleet', 'account', 'contacts', 'board', 'mail', 'portal', 'web', 'sale_management'],
+    'depends': ['base', 'fleet', 'account', 'contacts', 'board', 'mail', 'portal', 'web', 'website', 'sale_management'],
     # NOTA: Los catálogos SAT están en este mismo módulo, no necesitamos dependencia externa
 
     # Archivos de datos (orden estricto de carga)
@@ -125,6 +125,7 @@
         # IMPORTANTE: tms_menus.xml ANTES de sat_menus.xml
         # porque sat_menus.xml usa action_tms_dashboard que se define en tms_menus.xml
         'views/tms_menus.xml',               # Define action_tms_dashboard y menús operativos
+        'views/res_config_settings_views.xml', # Depende de menu_tms_config
         'views/sat_menus.xml',               # Usa menu_tms_root y action_tms_dashboard
     ],
 
@@ -134,8 +135,8 @@
         ],
         # Assets para portal: JS y CSS para vista moderna estilo Sales
         'web.assets_frontend': [
-            'tms/static/src/js/portal_waybill_sign.js',
-            'tms/static/src/css/portal_waybill.css',
+            'tms/static/src/js/tms_portal_signature_modal.js',
+            'tms/static/src/css/tms_portal_signature_modal.css',
         ],
     },
 

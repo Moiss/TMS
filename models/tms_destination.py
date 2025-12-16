@@ -58,83 +58,48 @@ class TmsDestination(models.Model):
     # CAMPOS ESENCIALES DE RUTA (Punto A -> Punto B)
     # ============================================================
 
-    # Identificación básica
-    name = fields.Char(string='Nombre de la Ruta', required=True)
+    # Many2one: moneda (relacionada a la compañía)
+    currency_id = fields.Many2one(
+        'res.currency',
+        string='Moneda',
+        related='company_id.currency_id',
+        readonly=True,
+    )
+
+    # ============================================================
+    # CAMPOS ESENCIALES DE RUTA (ZIP A -> ZIP B)
+    # ============================================================
+
+    origin_zip = fields.Char(string='CP Origen', required=True, index=True)
+    dest_zip = fields.Char(string='CP Destino', required=True, index=True)
+
+    vehicle_type_id = fields.Many2one('tms.vehicle.type', string="Tipo de Vehículo")
+
+    # Identificación básica (Computado)
+    name = fields.Char(string='Nombre de la Ruta', compute='_compute_name', store=True)
+
+    @api.depends('origin_zip', 'dest_zip', 'vehicle_type_id')
+    def _compute_name(self):
+        for record in self:
+            record.name = f"{record.origin_zip} -> {record.dest_zip} ({record.vehicle_type_id.name or 'N/A'})"
+
+
     active = fields.Boolean(default=True, string="Activa")
-
-    # REEMPLAZO: Usamos State (Estado) en lugar de Municipio
-    state_origin_id = fields.Many2one(
-        'res.country.state',
-        string='Estado Origen',
-        domain="[('country_id.code', '=', 'MX')]",
-        help='Estado de origen de la ruta (México)'
-    )
-
-    state_dest_id = fields.Many2one(
-        'res.country.state',
-        string='Estado Destino',
-        domain="[('country_id.code', '=', 'MX')]",
-        help='Estado de destino de la ruta (México)'
-    )
 
     distance_km = fields.Float(string='Distancia (km)', digits=(10, 2))
     duration_hours = fields.Float(string='Duración (hrs)', digits=(10, 2))
     notes = fields.Text(string='Notas')
 
-    # Float: costo promedio de casetas para esta ruta
-    toll_cost = fields.Float(
+    # Float: costo de casetas para esta ruta
+    cost_tolls = fields.Float(
         string='Costo de Casetas',
         digits=(10, 2),
-        help='Costo promedio de casetas en pesos para esta ruta'
+        help='Costo calculado de casetas'
     )
 
-    # ============================================================
-    # VALIDACIONES
-    # ============================================================
+    last_update = fields.Date(string="Última Actualización", default=fields.Date.context_today)
 
-    @api.constrains('distance_km')
-    def _check_distance(self):
-        """
-        Valida que la distancia sea mayor a cero.
-        """
-        for record in self:
-            if record.distance_km and record.distance_km <= 0:
-                raise ValidationError(
-                    _('La distancia debe ser mayor a cero.')
-                )
-
-    @api.constrains('state_origin_id', 'state_dest_id')
-    def _check_locations(self):
-        for record in self:
-            if record.state_origin_id and record.state_dest_id:
-                if record.state_origin_id == record.state_dest_id:
-                    # Opcional: Permitir rutas intra-estatales.
-                    # El prompt no prohíbe explícitamente rutas dentro del mismo estado,
-                    # pero la validación anterior impedía mismo municipio.
-                    # Si el estado es el mismo, es posible que sea válido (ej. GDL a Pto Vallarta son mismo estado).
-                    # Eliminaremos la restricción estricta de "mismo estado" a menos que sea requerida,
-                    # ya que rutas internas son comunes.
-                    pass
-
-
-    def action_apply_matched_route(self):
-        """
-        PROXY METHOD:
-        Necesario porque el botón está en la vista lista de 'tms.destination'.
-        Delega la ejecución al modelo 'tms.waybill' vía context, como solicitado.
-        """
-        # Obtenemos el ID del Waybill activo desde el contexto
-        # Dependiendo de dónde se abra, suele ser 'active_id' o 'parent_id'
-        # En una vista embebida (inline list), el active_id es el padre.
-        waybill_id = self.env.context.get('parent.id') or self.env.context.get('active_id')
-
-        # Fallback: intentar recuperar desde el contexto si se pasó explícitamente
-        if not waybill_id and self.env.context.get('waybill_id'):
-            waybill_id = self.env.context.get('waybill_id')
-
-        if waybill_id:
-            # Llamamos al método en tms.waybill pasando el ID de esta ruta
-            # Esto cumple con "ejecutar exclusivamente en tms.waybill"
-            return self.env['tms.waybill'].browse(waybill_id).with_context(route_id=self.id).action_apply_matched_route()
-
-        return False
+    _sql_constraints = [
+        ('unique_route', 'unique(company_id, origin_zip, dest_zip, vehicle_type_id)',
+         'Ya existe una ruta guardada para este origen, destino y tipo de vehículo.')
+    ]

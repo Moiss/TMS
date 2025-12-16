@@ -32,5 +32,21 @@ from . import res_partner_tms         # Extensión de res.partner para Catálogo
 
 from . import tms_fleet_vehicle       # Extensión de fleet.vehicle (tractores y remolques)
 from . import tms_destination         # Destinos/Rutas comerciales por empresa
+from . import tms_vehicle_type
+from . import tms_fleet_vehicle
+from . import res_partner_tms
+from . import tms_destination
+from . import sat_config_autotransporte
+from . import sat_tipo_permiso
+from . import sat_figura_transporte
+from . import sat_clave_prod
+from . import sat_clave_unidad
+from . import sat_material_peligroso
+from . import sat_embalaje
+from . import sat_colonia
+from . import sat_localidad
+from . import sat_municipio
+from . import sat_codigo_postal
 from . import tms_waybill
+from . import res_config_settings
 from . import tms_vehicle_type             # Viajes / Cartas Porte (MODELO MAESTRO: fusiona Cotización + Viaje)

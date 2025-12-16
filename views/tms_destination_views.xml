@@ -15,14 +15,17 @@
         <field name="model">tms.destination</field>
         <field name="arch" type="xml">
             <list string="Rutas Comerciales">
-                <!-- Columna: Nombre de la ruta -->
+                <!-- Columna: Nombre de la ruta (Calculado) -->
                 <field name="name"/>
 
-                <!-- Columna: Estado Origen -->
-                <field name="state_origin_id"/>
+                <!-- Columna: Origen -->
+                <field name="origin_zip"/>
 
-                <!-- Columna: Estado Destino -->
-                <field name="state_dest_id"/>
+                <!-- Columna: Destino -->
+                <field name="dest_zip"/>
+
+                <!-- Columna: Vehículo -->
+                <field name="vehicle_type_id"/>
 
                 <!-- Columna: Distancia -->
                 <field name="distance_km" sum="Total Km"/>
@@ -31,13 +34,17 @@
                 <field name="duration_hours" optional="show"/>
 
                 <!-- Columna: Costo Casetas -->
-                <field name="toll_cost" widget="monetary" optional="show"/>
+                <field name="cost_tolls" widget="monetary" optional="show"/>
+
+                <!-- Columna: Última act -->
+                <field name="last_update"/>
 
                 <!-- Columna: Activa -->
                 <field name="active" widget="boolean_toggle"/>
 
                 <!-- Campo oculto: compañía (para multi-empresa) -->
                 <field name="company_id" column_invisible="1"/>
+                <field name="currency_id" column_invisible="1"/>
             </list>
         </field>
     </record>
@@ -51,46 +58,33 @@
                 <sheet>
                     <div class="oe_title">
                         <h1>
-                            <field name="name" placeholder="ej: Jalisco - CDMX"/>
+                            <field name="name" placeholder="Ruta Auto-generada" readonly="1"/>
                         </h1>
                     </div>
 
                     <group>
-                        <!-- Primera columna: Origen -->
-                        <group string="Origen">
-                            <field name="state_origin_id" required="1" options="{'no_create': True, 'no_open': True}"/>
+                        <!-- Primera columna: Origen / Destino -->
+                        <group string="Ubicación">
+                            <field name="origin_zip" placeholder="Ej. 45000"/>
+                            <field name="dest_zip" placeholder="Ej. 11000"/>
+                             <field name="vehicle_type_id"/>
                         </group>
 
-                        <!-- Segunda columna: Destino -->
-                        <group string="Destino">
-                            <field name="state_dest_id" required="1" options="{'no_create': True, 'no_open': True}"/>
-                        </group>
-                    </group>
-
-                    <group>
-                        <group string="Información de Ruta">
-                            <!-- Campo: Distancia en KM -->
+                        <!-- Segunda columna: Métricas -->
+                        <group string="Métricas (Cache)">
                             <field name="distance_km"/>
-
-                            <!-- Campo: Duración estimada -->
-                            <field name="duration_hours"/>
-
-                            <!-- Campo: Costo de casetas -->
-                            <field name="toll_cost"/>
-
-                            <!-- Campo: Activa -->
+                            <field name="duration_hours" widget="float_time"/>
+                            <field name="cost_tolls" widget="monetary"/>
+                            <field name="last_update" readonly="1"/>
                             <field name="active"/>
-                        </group>
-
-                        <group string="Empresa">
-                            <!-- Campo: Compañía (solo visible en multi-empresa) -->
                             <field name="company_id" groups="base.group_multi_company"/>
+                             <field name="currency_id" invisible="1"/>
                         </group>
                     </group>
 
                     <group>
                         <!-- Campo: Notas (ancho completo) -->
-                        <field name="notes" placeholder="Observaciones sobre carreteras, casetas, etc."/>
+                        <field name="notes" placeholder="Observaciones adicionales..."/>
                     </group>
                 </sheet>
             </form>
@@ -104,17 +98,22 @@
         <field name="arch" type="xml">
             <search string="Buscar Rutas">
                 <field name="name"/>
-                <field name="state_origin_id"/>
-                <field name="state_dest_id"/>
+                <field name="origin_zip"/>
+                <field name="dest_zip"/>
+                <field name="vehicle_type_id"/>
 
                 <!-- Filtro: Solo rutas activas -->
                 <filter name="filter_active" string="Activas"
                         domain="[('active', '=', True)]"/>
 
-                <!-- Agrupación por origen -->
+                <!-- Agrupación -->
                 <group expand="0" string="Agrupar Por">
-                    <filter name="group_origin" string="Estado Origen"
-                            context="{'group_by': 'state_origin_id'}"/>
+                    <filter name="group_origin" string="CP Origen"
+                            context="{'group_by': 'origin_zip'}"/>
+                    <filter name="group_dest" string="CP Destino"
+                            context="{'group_by': 'dest_zip'}"/>
+                    <filter name="group_vehicle" string="Tipo Vehículo"
+                            context="{'group_by': 'vehicle_type_id'}"/>
                 </group>
             </search>
         </field>

@@ -30,3 +30,4 @@ access_tms_waybill_public,tms.waybill.public,model_tms_waybill,base.group_public
 access_tms_waybill_line_portal,tms.waybill.line.portal,model_tms_waybill_line,base.group_portal,1,0,0,0
 access_tms_waybill_line_public,tms.waybill.line.public,model_tms_waybill_line,base.group_public,1,0,0,0
 access_partner_assign_company_wizard_manager,partner.assign.company.wizard.manager,model_partner_assign_company_wizard,tms.group_tms_manager,1,1,1,1
+access_res_config_settings_tms,res.config.settings.tms,model_res_config_settings,base.group_system,1,1,1,1

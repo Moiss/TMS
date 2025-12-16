@@ -386,6 +386,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"/>
                             </div>
                             <form t-attf-action="/my/waybills/{{ waybill.id }}/sign" method="post">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                                 <t t-if="token">
                                     <input type="hidden" name="access_token" t-att-value="token"/>
                                 </t>
@@ -444,7 +445,7 @@
                                         -->
                                         <div class="border rounded p-2 bg-white" style="position: relative; overflow: hidden;">
                                             <canvas id="signatureCanvas"
-                                                    style="width: 100%; height: 220px; display: block;"/>
+                                                    style="width: 100%; height: 220px; display: block;"></canvas>
                                         </div>
                                         <small class="text-muted">
                                             <span id="signatureHint">Dibuje su firma en el recuadro superior</span>
@@ -506,6 +507,7 @@
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"/>
                             </div>
                             <form t-attf-action="/my/waybills/{{ waybill.id }}/reject" method="post">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                                 <t t-if="token">
                                     <input type="hidden" name="access_token" t-att-value="token"/>
                                 </t>

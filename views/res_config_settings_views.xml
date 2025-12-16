@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.tms</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="TMS" string="TMS" name="tms">
+                    <block title="Cálculo de Rutas" name="tms_routes_setting_container">
+                        <setting string="Integración con Mapas" help="Use una API externa para calcular distancias y tiempos automáticamente.">
+                            <field name="module_tms_google_maps"/>
+                            <div class="content-group" invisible="not module_tms_google_maps">
+                                <div class="row mt16">
+                                    <label for="tms_google_maps_api_key" class="col-lg-3 o_light_label"/>
+                                    <field name="tms_google_maps_api_key"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="tms_route_provider" class="col-lg-3 o_light_label"/>
+                                    <field name="tms_route_provider"/>
+                                </div>
+                                <div class="text-muted small mt8">
+                                    Nota: El uso de la API de Google Maps puede generar costos. Asegúrese de tener una cuenta de facturación activa en Google Cloud Platform.
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_tms_config_settings" model="ir.actions.act_window">
+        <field name="name">Ajustes TMS</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module' : 'tms'}</field>
+    </record>
+
+    <menuitem id="menu_tms_config_settings"
+              name="Ajustes"
+              parent="menu_tms_config"
+              sequence="0"
+              action="action_tms_config_settings"
+              groups="base.group_system"/>
+</odoo>
